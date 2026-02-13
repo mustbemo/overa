@@ -1,6 +1,7 @@
 "use client";
 
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
+import { Maximize2, Minimize2, Power } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const EXPANDED_SIZE = { width: 340, height: 80 };
@@ -100,86 +101,63 @@ export default function Home() {
     >
       <section
         data-tauri-drag-region
-        className="relative flex h-full w-full cursor-grab select-none items-center justify-between overflow-hidden rounded-full border border-white/70 bg-[linear-gradient(140deg,rgba(255,255,255,0.58),rgba(255,255,255,0.3))] px-4 text-slate-900 backdrop-blur-2xl active:cursor-grabbing"
+        className="group relative isolate flex h-full w-full cursor-grab select-none overflow-hidden rounded-2xl border border-white/20 bg-black/45 text-white backdrop-blur-md active:cursor-grabbing"
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(255,255,255,0.14)_45%,rgba(255,255,255,0.02)_100%)]"
+          className="pointer-events-none absolute inset-[1px] rounded-2xl border border-white/10"
         />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-[1px] rounded-full border border-white/65"
-        />
+        <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-3 pt-2">
+          <p
+            data-tauri-drag-region
+            className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/70"
+          >
+            Clock Widget
+          </p>
+          <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+            <button
+              type="button"
+              aria-label={isCollapsed ? "Expand clock" : "Collapse clock"}
+              onClick={handleToggleSize}
+              className="flex h-4 w-4 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/70 transition hover:text-white"
+            >
+              {isCollapsed ? <Maximize2 size={12} /> : <Minimize2 size={12} />}
+            </button>
+            <button
+              type="button"
+              aria-label="Quit app"
+              onClick={handleQuit}
+              className="flex h-4 w-4 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/70 transition hover:text-white"
+            >
+              <Power size={12} />
+            </button>
+          </div>
+        </div>
 
         {isCollapsed ? (
-          <>
+          <p
+            data-tauri-drag-region
+            className="relative z-10 flex h-full w-full items-center justify-center px-4 pt-3 text-lg font-semibold tracking-wide text-white"
+          >
+            {time}
+          </p>
+        ) : (
+          <div
+            data-tauri-drag-region
+            className="relative z-10 flex h-full w-full items-end justify-between px-4 pb-3 pt-6"
+          >
+            <div data-tauri-drag-region>
+              <p className="text-[29px] font-semibold leading-none tracking-wide text-white">
+                {time}
+              </p>
+            </div>
             <p
               data-tauri-drag-region
-              className="relative z-10 w-full text-center text-lg font-semibold tracking-wide text-slate-900"
+              className="pb-1 text-xs font-medium tracking-wide text-white/75"
             >
-              {time}
+              {date}
             </p>
-            <div className="relative z-10 ml-2 flex items-center gap-1">
-              <button
-                type="button"
-                aria-label="Maximize clock"
-                onClick={handleToggleSize}
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-500/35 bg-white/60 text-xs text-slate-800 transition hover:bg-white/85"
-              >
-                □
-              </button>
-              <button
-                type="button"
-                aria-label="Quit app"
-                onClick={handleQuit}
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-rose-300/50 bg-white/60 text-base leading-none text-rose-700 transition hover:bg-white/85"
-              >
-                ×
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div
-              data-tauri-drag-region
-              className="relative z-10 flex items-center gap-3"
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-              <div data-tauri-drag-region className="space-y-0.5">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-700">
-                  Clock
-                </p>
-                <p className="text-xl font-semibold leading-none tracking-wide text-slate-900">
-                  {time}
-                </p>
-              </div>
-            </div>
-
-            <div className="relative z-10 flex items-center gap-3">
-              <p
-                data-tauri-drag-region
-                className="text-xs font-medium tracking-wide text-slate-700"
-              >
-                {date}
-              </p>
-              <button
-                type="button"
-                aria-label="Minimize clock"
-                onClick={handleToggleSize}
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-500/35 bg-white/60 text-sm text-slate-800 transition hover:bg-white/85"
-              >
-                -
-              </button>
-              <button
-                type="button"
-                aria-label="Quit app"
-                onClick={handleQuit}
-                className="flex h-6 w-6 items-center justify-center rounded-full border border-rose-300/50 bg-white/60 text-base leading-none text-rose-700 transition hover:bg-white/85"
-              >
-                ×
-              </button>
-            </div>
-          </>
+          </div>
         )}
       </section>
     </main>
