@@ -1,164 +1,185 @@
 "use client";
 
-import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
-import { Maximize2, Minimize2, Power } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, Power, RefreshCcw } from "lucide-react";
+import { useMemo, useState } from "react";
+import { EmptyState } from "@/components/cricket/empty-state";
+import { ErrorState } from "@/components/cricket/error-state";
+import { LoadingState } from "@/components/cricket/loading-state";
+import { MatchCard } from "@/components/cricket/match-card";
+import { useSyncWindowSize, useWindowClose, useWindowDragStart } from "@/hooks/use-tauri-window";
+import {
+  formatUpdatedTime,
+  MATCH_TABS,
+  pickDefaultTab,
+  type MatchTabKey,
+} from "@/lib/cricket-ui";
+import { useMatchesQuery } from "@/lib/cricket-query";
+import { cn } from "@/lib/classnames";
+import { HOME_WINDOW_SIZE } from "@/lib/window-presets";
 
-const EXPANDED_SIZE = { width: 340, height: 80 };
-const COLLAPSED_SIZE = { width: 190, height: 60 };
+const EMPTY_TAB_MESSAGE: Record<
+  MatchTabKey,
+  { title: string; description: string }
+> = {
+  live: {
+    title: "No live matches",
+    description: "Live games will appear here automatically.",
+  },
+  upcoming: {
+    title: "No upcoming matches",
+    description: "Upcoming fixtures are currently unavailable.",
+  },
+  recent: {
+    title: "No recently finished matches",
+    description: "Finished match summaries are currently unavailable.",
+  },
+};
 
-export default function Home() {
-  const [now, setNow] = useState(() => new Date());
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export default function HomePage() {
+  useSyncWindowSize(HOME_WINDOW_SIZE);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(new Date());
-    }, 1000);
+  const startDrag = useWindowDragStart();
+  const closeWindow = useWindowClose();
+  const {
+    data,
+    error,
+    isError,
+    isFetching,
+    isLoading,
+    refetch,
+    dataUpdatedAt,
+  } = useMatchesQuery();
 
-    return () => {
-      window.clearInterval(timer);
+  const [selectedTab, setSelectedTab] = useState<MatchTabKey>("live");
+
+  const counts = useMemo(() => {
+    return {
+      live: data?.live.length ?? 0,
+      upcoming: data?.upcoming.length ?? 0,
+      recent: data?.recent.length ?? 0,
     };
-  }, []);
+  }, [data]);
 
-  const time = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }).format(now),
-    [now],
-  );
-
-  const date = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }).format(now),
-    [now],
-  );
-
-  const isTauri =
-    typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-
-  const handleDrag = useCallback(() => {
-    if (!isTauri) {
-      return;
+  const activeTab = useMemo(() => {
+    if (!data) {
+      return selectedTab;
     }
 
-    void (async () => {
-      try {
-        await getCurrentWindow().startDragging();
-      } catch {
-        // No-op if dragging is not available.
-      }
-    })();
-  }, [isTauri]);
-
-  const handleToggleSize = useCallback(() => {
-    const nextCollapsed = !isCollapsed;
-    setIsCollapsed(nextCollapsed);
-
-    if (!isTauri) {
-      return;
+    if (data[selectedTab].length > 0) {
+      return selectedTab;
     }
 
-    const size = nextCollapsed ? COLLAPSED_SIZE : EXPANDED_SIZE;
-    void (async () => {
-      try {
-        await getCurrentWindow().setSize(
-          new LogicalSize(size.width, size.height),
-        );
-      } catch {
-        // Ignore if size change is blocked by runtime.
-      }
-    })();
-  }, [isCollapsed, isTauri]);
+    return pickDefaultTab(data);
+  }, [data, selectedTab]);
 
-  const handleQuit = useCallback(() => {
-    if (!isTauri) {
-      return;
-    }
-    void getCurrentWindow().close();
-  }, [isTauri]);
+  const matches = data?.[activeTab] ?? [];
 
   return (
     <main
+      className="flex h-screen w-screen items-center justify-center bg-transparent p-2"
+      onMouseDown={startDrag}
       data-tauri-drag-region
-      className="flex h-screen w-screen items-center justify-center bg-transparent"
-      onMouseDown={(event) => {
-        const target = event.target as HTMLElement | null;
-        if (target?.closest("button")) {
-          return;
-        }
-        if (event.button === 0) {
-          handleDrag();
-        }
-      }}
     >
-      <section
-        data-tauri-drag-region
-        className="group relative isolate flex h-full w-full cursor-grab select-none overflow-hidden rounded-2xl border border-white/20 bg-black/45 text-white backdrop-blur-md active:cursor-grabbing"
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-[1px] rounded-2xl border border-white/10"
-        />
-        <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-3 pt-2">
-          <p
-            data-tauri-drag-region
-            className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/70"
-          >
-            Clock Widget
-          </p>
-          <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
-            <button
-              type="button"
-              aria-label={isCollapsed ? "Expand clock" : "Collapse clock"}
-              onClick={handleToggleSize}
-              className="flex h-4 w-4 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/70 transition hover:text-white"
-            >
-              {isCollapsed ? <Maximize2 size={12} /> : <Minimize2 size={12} />}
-            </button>
-            <button
-              type="button"
-              aria-label="Quit app"
-              onClick={handleQuit}
-              className="flex h-4 w-4 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/70 transition hover:text-white"
-            >
-              <Power size={12} />
-            </button>
-          </div>
-        </div>
-
-        {isCollapsed ? (
-          <p
-            data-tauri-drag-region
-            className="relative z-10 flex h-full w-full items-center justify-center px-4 pt-3 text-lg font-semibold tracking-wide text-white"
-          >
-            {time}
-          </p>
-        ) : (
-          <div
-            data-tauri-drag-region
-            className="relative z-10 flex h-full w-full items-end justify-between px-4 pb-3 pt-6"
-          >
-            <div data-tauri-drag-region>
-              <p className="text-[29px] font-semibold leading-none tracking-wide text-white">
-                {time}
-              </p>
-            </div>
-            <p
-              data-tauri-drag-region
-              className="pb-1 text-xs font-medium tracking-wide text-white/75"
-            >
-              {date}
+      <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[26px] border border-white/20 bg-slate-950/70 shadow-[0_18px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+        <header
+          className="flex items-start justify-between gap-2 border-b border-white/10 px-3 py-2.5"
+          data-tauri-drag-region
+        >
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-200/90">
+              CricLive Widget
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-300/80">
+              Floating desktop scoreboard
             </p>
           </div>
-        )}
+
+          <div className="flex items-center gap-1" data-no-drag>
+            <button
+              type="button"
+              onClick={() => {
+                void refetch();
+              }}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+              aria-label="Refresh now"
+              data-no-drag
+            >
+              {isFetching ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCcw className="h-3.5 w-3.5" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={closeWindow}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+              aria-label="Close app"
+              data-no-drag
+            >
+              <Power className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto px-3 py-3" data-no-drag>
+          <nav className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+            {MATCH_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setSelectedTab(tab.key)}
+                className={cn(
+                  "rounded-lg px-2 py-1.5 text-[11px] font-semibold transition",
+                  activeTab === tab.key
+                    ? "bg-white/15 text-slate-100"
+                    : "text-slate-300/80 hover:bg-white/10 hover:text-slate-100",
+                )}
+                data-no-drag
+              >
+                <span>{tab.label}</span>
+                <span className="ml-1 text-[10px] text-slate-300/70">
+                  ({counts[tab.key]})
+                </span>
+              </button>
+            ))}
+          </nav>
+
+          {isLoading ? <LoadingState message="Loading matches..." /> : null}
+
+          {isError ? (
+            <ErrorState
+              title="Unable to load matches"
+              message={error?.message ?? "Unknown error"}
+              onRetry={() => {
+                void refetch();
+              }}
+            />
+          ) : null}
+
+          {!isLoading && !isError && matches.length === 0 ? (
+            <EmptyState
+              title={EMPTY_TAB_MESSAGE[activeTab].title}
+              description={EMPTY_TAB_MESSAGE[activeTab].description}
+            />
+          ) : null}
+
+          {!isLoading && !isError && matches.length > 0 ? (
+            <div className="space-y-2.5">
+              {matches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <footer
+          className="flex items-center justify-between border-t border-white/10 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-slate-300/70"
+          data-tauri-drag-region
+        >
+          <span>Auto Refresh 30s</span>
+          <span>Updated {formatUpdatedTime(dataUpdatedAt)}</span>
+        </footer>
       </section>
     </main>
   );

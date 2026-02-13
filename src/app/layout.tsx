@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { AppQueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Clock Widget",
-  description: "Always-on-top draggable clock widget built with Tauri and Next.js",
+  title: "CricLive Floating Desktop",
+  description: "Always-on-top floating cricket live score desktop widget",
 };
 
 export default function RootLayout({
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body>
+        <AppQueryProvider>{children}</AppQueryProvider>
+      </body>
     </html>
   );
 }

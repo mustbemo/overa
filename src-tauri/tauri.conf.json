@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Tauri Next Desktop",
+  "productName": "CricLive Widget",
   "version": "0.1.0",
-  "identifier": "com.mohammeddanish.clockwidget",
+  "identifier": "com.mohammeddanish.criclivewidget",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
@@ -14,14 +14,14 @@
     "windows": [
       {
         "label": "clock",
-        "title": "Clock Widget",
-        "width": 340,
-        "height": 80,
-        "minWidth": 190,
-        "minHeight": 60,
-        "maxWidth": 340,
-        "maxHeight": 80,
-        "resizable": false,
+        "title": "CricLive Widget",
+        "width": 420,
+        "height": 620,
+        "minWidth": 320,
+        "minHeight": 180,
+        "maxWidth": 620,
+        "maxHeight": 920,
+        "resizable": true,
         "maximizable": false,
         "minimizable": false,
         "closable": true,

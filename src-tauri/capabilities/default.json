@@ -10,6 +10,17 @@
     "core:window:allow-start-dragging",
     "core:window:allow-set-focus",
     "core:window:allow-set-size",
-    "core:window:allow-close"
+    "core:window:allow-close",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://www.cricbuzz.com/*"
+        },
+        {
+          "url": "https://*.cricbuzz.com/*"
+        }
+      ]
+    }
   ]
 }
