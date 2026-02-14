@@ -1,27 +1,54 @@
 "use client";
 
-import { ArrowLeft, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ArrowLeft, Expand, Loader2, Power, Shrink } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
-import { WidgetCollapsed } from "@/components/cricket/widget-collapsed";
-import { WidgetExpanded } from "@/components/cricket/widget-expanded";
+import { SubscribeCompactView } from "@/components/cricket/subscribe-compact-view";
+import { SubscribeExpandedView } from "@/components/cricket/subscribe-expanded-view";
 import {
   useSyncWindowSize,
+  useWindowClose,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
-import {
-  buildMatchHref,
-  getPartnership,
-  getStatusType,
-} from "@/lib/cricket-ui";
+import { buildMatchHref, getPartnership, getStatusType } from "@/lib/cricket-ui";
 import { useMatchDetailQuery } from "@/lib/cricket-query";
-import { cn } from "@/lib/classnames";
 import {
   SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
   SUBSCRIBE_EXPANDED_WINDOW_SIZE,
 } from "@/lib/window-presets";
+
+function IconActionButton({
+  title,
+  onClick,
+  children,
+}: {
+  title: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/14 bg-black/70 text-zinc-200 transition hover:border-white/30 hover:bg-zinc-900 hover:text-white"
+      data-no-drag
+    >
+      {children}
+    </button>
+  );
+}
+
+function SubscribeCard({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="h-full w-full rounded-[18px] border border-white/16 bg-zinc-950/92 shadow-[0_20px_48px_rgba(0,0,0,0.65)] backdrop-blur-xl">
+      {children}
+    </section>
+  );
+}
 
 export function SubscribePageClient() {
   const router = useRouter();
@@ -29,7 +56,6 @@ export function SubscribePageClient() {
   const matchId = searchParams.get("matchId") ?? "";
 
   const [expanded, setExpanded] = useState(false);
-  const [hovered, setHovered] = useState(false);
 
   useSyncWindowSize(
     expanded
@@ -38,6 +64,7 @@ export function SubscribePageClient() {
   );
 
   const startDrag = useWindowDragStart();
+  const closeWindow = useWindowClose();
 
   const { data, error, isError, isLoading, isFetching, refetch } =
     useMatchDetailQuery(matchId);
@@ -53,129 +80,103 @@ export function SubscribePageClient() {
 
   if (!matchId) {
     return (
-      <main className="flex h-screen w-screen items-center justify-center bg-transparent p-2">
-        <section className="glass-frame w-full rounded-[26px] border border-white/20 bg-slate-950/70 p-4">
-          <ErrorState
-            title="Missing match id"
-            message="Open this page from match details to continue."
-            onRetry={() => router.push("/")}
-          />
-        </section>
+      <main className="h-screen w-screen bg-transparent p-0.5">
+        <SubscribeCard>
+          <div className="p-3">
+            <ErrorState
+              title="Missing match id"
+              message="Open this page from match details to continue."
+              onRetry={() => router.push("/")}
+            />
+          </div>
+        </SubscribeCard>
       </main>
     );
   }
 
   if (data && statusType !== "live") {
     return (
-      <main className="flex h-screen w-screen items-center justify-center bg-transparent p-2">
-        <section className="glass-frame w-full rounded-[26px] border border-white/20 bg-slate-950/70 p-4">
-          <ErrorState
-            title="Widget available for live matches"
-            message="This match is not live right now."
-            onRetry={() => router.push(buildMatchHref("/match", matchId))}
-          />
-        </section>
+      <main className="h-screen w-screen bg-transparent p-0.5">
+        <SubscribeCard>
+          <div className="p-3">
+            <ErrorState
+              title="Widget available for live matches"
+              message="This match is not live right now."
+              onRetry={() => router.push(buildMatchHref("/match", matchId))}
+            />
+          </div>
+        </SubscribeCard>
       </main>
     );
   }
 
   return (
     <main
-      className="flex h-screen w-screen items-center justify-center bg-transparent p-2"
+      className="h-screen w-screen select-none bg-transparent p-0.5"
       onMouseDown={startDrag}
       data-tauri-drag-region
     >
-      <section
-        className={cn(
-          "glass-frame flex h-full w-full flex-col overflow-hidden rounded-[24px] border border-white/20 bg-slate-950/70 shadow-[0_18px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl transition-[height,width] duration-300",
-        )}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <header
-          className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2"
-          data-tauri-drag-region
-        >
-          <button
-            type="button"
-            onClick={() => router.push(buildMatchHref("/match", matchId))}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition hover:border-white/20 hover:bg-white/10"
-            aria-label="Back to details"
-            data-no-drag
+      <SubscribeCard>
+        <div className="flex h-full w-full flex-col overflow-hidden">
+          <header
+            className="flex items-center justify-between border-b border-white/10 px-2 py-1.5"
+            data-tauri-drag-region
           >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
+            <IconActionButton
+              title="Back to match details"
+              onClick={() => router.push(buildMatchHref("/match", matchId))}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </IconActionButton>
 
-          <div className="min-w-0 flex-1 px-1 text-center">
-            <p className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-teal-200/90">
-              Live Widget
-            </p>
-            <p className="truncate text-[11px] text-slate-300/75">
-              {data?.title || "Loading..."}
-            </p>
-          </div>
+            <div className="flex items-center gap-1" data-no-drag>
+              {isFetching ? (
+                <span
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/14 bg-black/70 text-zinc-300"
+                  title="Refreshing"
+                >
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                </span>
+              ) : null}
+              <IconActionButton
+                title={expanded ? "Collapse widget" : "Expand widget"}
+                onClick={() => setExpanded((value) => !value)}
+              >
+                {expanded ? (
+                  <Shrink className="h-4 w-4" />
+                ) : (
+                  <Expand className="h-4 w-4" />
+                )}
+              </IconActionButton>
+              <IconActionButton title="Quit application" onClick={closeWindow}>
+                <Power className="h-4 w-4" />
+              </IconActionButton>
+            </div>
+          </header>
 
-          <div className="flex h-7 w-7 items-center justify-center">
-            {isFetching ? (
-              <Loader2 className="h-4 w-4 animate-spin text-slate-200" />
+          <div className="min-h-0 flex-1 overflow-y-auto px-2.5 py-2.5" data-no-drag>
+            {isLoading ? <LoadingState message="Loading live widget..." /> : null}
+
+            {isError ? (
+              <ErrorState
+                title="Unable to load widget"
+                message={error?.message ?? "Unknown error"}
+                onRetry={() => {
+                  void refetch();
+                }}
+              />
+            ) : null}
+
+            {!isLoading && !isError && data ? (
+              expanded ? (
+                <SubscribeExpandedView detail={data} partnership={partnership} />
+              ) : (
+                <SubscribeCompactView detail={data} />
+              )
             ) : null}
           </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-3 py-2" data-no-drag>
-          {isLoading ? <LoadingState message="Loading live widget..." /> : null}
-
-          {isError ? (
-            <ErrorState
-              title="Unable to load widget"
-              message={error?.message ?? "Unknown error"}
-              onRetry={() => {
-                void refetch();
-              }}
-            />
-          ) : null}
-
-          {!isLoading && !isError && data ? (
-            <div className="space-y-2">
-              <WidgetCollapsed detail={data} />
-
-              <div
-                className={cn(
-                  "overflow-hidden transition-all duration-300 ease-out",
-                  expanded ? "max-h-[380px] opacity-100" : "max-h-0 opacity-0",
-                )}
-              >
-                <WidgetExpanded detail={data} partnership={partnership} />
-              </div>
-            </div>
-          ) : null}
         </div>
-
-        <footer
-          className="flex items-center justify-between border-t border-white/10 px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-slate-300/70"
-          data-tauri-drag-region
-        >
-          <span>Auto Refresh 30s</span>
-          <button
-            type="button"
-            onClick={() => setExpanded((value) => !value)}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold transition",
-              hovered || expanded
-                ? "border-white/20 bg-white/10 text-slate-100"
-                : "border-transparent bg-transparent text-slate-300/60",
-            )}
-            data-no-drag
-          >
-            {expanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronUp className="h-3.5 w-3.5" />
-            )}
-            {expanded ? "Collapse" : "Expand"}
-          </button>
-        </footer>
-      </section>
+      </SubscribeCard>
     </main>
   );
 }

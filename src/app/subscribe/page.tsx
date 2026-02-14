@@ -6,8 +6,8 @@ export default function SubscribePage() {
   return (
     <Suspense
       fallback={
-        <main className="flex h-screen w-screen items-center justify-center bg-transparent p-2">
-          <section className="glass-frame w-full rounded-[26px] border border-white/20 bg-slate-950/70 p-4">
+        <main className="h-screen w-screen bg-transparent p-0.5">
+          <section className="h-full w-full rounded-[18px] border border-white/16 bg-zinc-950/92 p-3">
             <LoadingState message="Loading subscribe screen..." />
           </section>
         </main>

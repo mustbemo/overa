@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  background: transparent;
+  background: transparent !important;
   color-scheme: dark;
 }
 
@@ -16,10 +16,17 @@ body {
   height: 100%;
   margin: 0;
   background: transparent !important;
+  background-color: transparent !important;
+}
+
+html {
+  font-size: 15px;
 }
 
 body {
   overflow: hidden;
+  background: transparent !important;
+  background-color: transparent !important;
   color: #e2e8f0;
   font-family:
     "Avenir Next",
@@ -27,6 +34,17 @@ body {
     "Trebuchet MS",
     "Verdana",
     sans-serif;
+}
+
+body > * {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+main,
+[data-nextjs-scroll-focus-boundary] {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 .glass-frame {
@@ -41,9 +59,9 @@ body {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 80% at 0% 0%, rgba(45, 212, 191, 0.18), transparent 55%),
-    radial-gradient(90% 70% at 100% 100%, rgba(56, 189, 248, 0.14), transparent 60%),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.84));
+    radial-gradient(110% 70% at 0% 0%, rgba(255, 255, 255, 0.08), transparent 58%),
+    radial-gradient(90% 60% at 100% 100%, rgba(255, 255, 255, 0.04), transparent 62%),
+    linear-gradient(135deg, rgba(17, 17, 19, 0.95), rgba(5, 5, 6, 0.9));
 }
 
 .glass-frame > * {
@@ -67,4 +85,36 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.7);
+}
+
+.live-track {
+  position: relative;
+  display: inline-flex;
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(244, 244, 245, 0.35);
+  overflow: hidden;
+}
+
+.live-track__runner {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #fafafa;
+  transform: translateY(-50%);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.65);
+  animation: live-track-runner 1s ease-in-out infinite alternate;
+}
+
+@keyframes live-track-runner {
+  from {
+    left: 0;
+  }
+  to {
+    left: calc(100% - 5px);
+  }
 }

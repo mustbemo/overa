@@ -10,7 +10,7 @@ export type MatchTabKey = "live" | "upcoming" | "recent";
 export const MATCH_TABS: Array<{ key: MatchTabKey; label: string }> = [
   { key: "live", label: "Live" },
   { key: "upcoming", label: "Upcoming" },
-  { key: "recent", label: "Recently Finished" },
+  { key: "recent", label: "Finished" },
 ];
 
 export function getStatusType(status: string): MatchStatusType {
@@ -51,7 +51,10 @@ export function formatUpdatedTime(timestamp: number): string {
   }).format(timestamp);
 }
 
-export function buildMatchHref(pathname: "/match" | "/subscribe", matchId: string): string {
+export function buildMatchHref(
+  pathname: "/match" | "/subscribe",
+  matchId: string,
+): string {
   return `${pathname}?matchId=${encodeURIComponent(matchId)}`;
 }
 

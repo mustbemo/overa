@@ -14,11 +14,11 @@ export const MATCH_WINDOW_SIZE: WindowPreset = {
 };
 
 export const SUBSCRIBE_COLLAPSED_WINDOW_SIZE: WindowPreset = {
-  width: 380,
-  height: 220,
+  width: 384,
+  height: 196,
 };
 
 export const SUBSCRIBE_EXPANDED_WINDOW_SIZE: WindowPreset = {
-  width: 420,
-  height: 620,
+  width: 476,
+  height: 560,
 };

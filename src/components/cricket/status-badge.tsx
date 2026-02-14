@@ -2,9 +2,9 @@ import { cn } from "@/lib/classnames";
 import type { MatchStatusType } from "@/lib/types";
 
 const STATUS_STYLE: Record<MatchStatusType, string> = {
-  live: "border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
-  upcoming: "border-sky-400/30 bg-sky-500/15 text-sky-300",
-  complete: "border-slate-400/25 bg-slate-400/10 text-slate-200",
+  live: "border-white/25 bg-white/12 text-white",
+  upcoming: "border-zinc-500/35 bg-zinc-700/25 text-zinc-200",
+  complete: "border-zinc-600/35 bg-zinc-700/20 text-zinc-300",
 };
 
 const STATUS_LABEL: Record<MatchStatusType, string> = {
@@ -32,7 +32,9 @@ export function StatusBadge({
       title={status}
     >
       {statusType === "live" ? (
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
+        <span className="live-track" aria-hidden="true">
+          <span className="live-track__runner" />
+        </span>
       ) : null}
       {STATUS_LABEL[statusType]}
     </span>

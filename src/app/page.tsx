@@ -6,13 +6,12 @@ import { EmptyState } from "@/components/cricket/empty-state";
 import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
 import { MatchCard } from "@/components/cricket/match-card";
-import { useSyncWindowSize, useWindowClose, useWindowDragStart } from "@/hooks/use-tauri-window";
 import {
-  formatUpdatedTime,
-  MATCH_TABS,
-  pickDefaultTab,
-  type MatchTabKey,
-} from "@/lib/cricket-ui";
+  useSyncWindowSize,
+  useWindowClose,
+  useWindowDragStart,
+} from "@/hooks/use-tauri-window";
+import { MATCH_TABS, pickDefaultTab, type MatchTabKey } from "@/lib/cricket-ui";
 import { useMatchesQuery } from "@/lib/cricket-query";
 import { cn } from "@/lib/classnames";
 import { HOME_WINDOW_SIZE } from "@/lib/window-presets";
@@ -40,15 +39,8 @@ export default function HomePage() {
 
   const startDrag = useWindowDragStart();
   const closeWindow = useWindowClose();
-  const {
-    data,
-    error,
-    isError,
-    isFetching,
-    isLoading,
-    refetch,
-    dataUpdatedAt,
-  } = useMatchesQuery();
+  const { data, error, isError, isFetching, isLoading, refetch } =
+    useMatchesQuery();
 
   const [selectedTab, setSelectedTab] = useState<MatchTabKey>("live");
 
@@ -76,11 +68,11 @@ export default function HomePage() {
 
   return (
     <main
-      className="flex h-screen w-screen items-center justify-center bg-transparent p-2"
+      className="flex h-screen w-screen items-center justify-center bg-transparent"
       onMouseDown={startDrag}
       data-tauri-drag-region
     >
-      <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[26px] border border-white/20 bg-slate-950/70 shadow-[0_18px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+      <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[20px] border border-white/20 bg-slate-950/70 backdrop-blur-2xl">
         <header
           className="flex items-start justify-between gap-2 border-b border-white/10 px-3 py-2.5"
           data-tauri-drag-region
@@ -97,21 +89,6 @@ export default function HomePage() {
           <div className="flex items-center gap-1" data-no-drag>
             <button
               type="button"
-              onClick={() => {
-                void refetch();
-              }}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition hover:border-white/20 hover:bg-white/10"
-              aria-label="Refresh now"
-              data-no-drag
-            >
-              {isFetching ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <RefreshCcw className="h-3.5 w-3.5" />
-              )}
-            </button>
-            <button
-              type="button"
               onClick={closeWindow}
               className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition hover:border-white/20 hover:bg-white/10"
               aria-label="Close app"
@@ -122,15 +99,15 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-3 py-3" data-no-drag>
-          <nav className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+        <div className="flex-1 overflow-y-auto px-2 py-2" data-no-drag>
+          <nav className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-white/3 p-1">
             {MATCH_TABS.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => setSelectedTab(tab.key)}
                 className={cn(
-                  "rounded-lg px-2 py-1.5 text-[11px] font-semibold transition",
+                  "rounded-lg px-2 py-1 text-[10px] transition",
                   activeTab === tab.key
                     ? "bg-white/15 text-slate-100"
                     : "text-slate-300/80 hover:bg-white/10 hover:text-slate-100",
@@ -177,8 +154,23 @@ export default function HomePage() {
           className="flex items-center justify-between border-t border-white/10 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-slate-300/70"
           data-tauri-drag-region
         >
-          <span>Auto Refresh 30s</span>
-          <span>Updated {formatUpdatedTime(dataUpdatedAt)}</span>
+          <button
+            type="button"
+            onClick={() => {
+              void refetch();
+            }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 font-semibold text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+            aria-label="Refresh now"
+            data-no-drag
+          >
+            {isFetching ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCcw className="h-3.5 w-3.5" />
+            )}
+            Refresh
+          </button>
+          <span>v0.1.0</span>
         </footer>
       </section>
     </main>
