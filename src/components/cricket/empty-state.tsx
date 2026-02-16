@@ -6,9 +6,9 @@ export function EmptyState({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-slate-300">
-      <p className="font-semibold text-slate-100">{title}</p>
-      <p className="mt-2 text-slate-300/80">{description}</p>
+    <div className="rounded-xl border border-white/8 bg-white/4 px-3 py-6 text-center text-[11px] text-slate-400">
+      <p className="font-medium text-slate-200">{title}</p>
+      <p className="mt-1.5 text-slate-400/80">{description}</p>
     </div>
   );
 }

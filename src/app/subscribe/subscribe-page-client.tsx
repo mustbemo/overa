@@ -12,7 +12,11 @@ import {
   useWindowClose,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
-import { buildMatchHref, getPartnership, getStatusType } from "@/lib/cricket-ui";
+import {
+  buildMatchHref,
+  getPartnership,
+  getStatusType,
+} from "@/lib/cricket-ui";
 import { useMatchDetailQuery } from "@/lib/cricket-query";
 import {
   SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
@@ -34,7 +38,7 @@ function IconActionButton({
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/14 bg-black/70 text-zinc-200 transition hover:border-white/30 hover:bg-zinc-900 hover:text-white"
+      className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-black/60 text-zinc-300 transition hover:border-white/20 hover:bg-zinc-800 hover:text-white"
       data-no-drag
     >
       {children}
@@ -44,7 +48,7 @@ function IconActionButton({
 
 function SubscribeCard({ children }: { children: React.ReactNode }) {
   return (
-    <section className="h-full w-full rounded-[18px] border border-white/16 bg-zinc-950/92 shadow-[0_20px_48px_rgba(0,0,0,0.65)] backdrop-blur-xl">
+    <section className="h-full w-full rounded-[16px] border border-white/12 bg-zinc-950/92 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl">
       {children}
     </section>
   );
@@ -58,9 +62,7 @@ export function SubscribePageClient() {
   const [expanded, setExpanded] = useState(false);
 
   useSyncWindowSize(
-    expanded
-      ? SUBSCRIBE_EXPANDED_WINDOW_SIZE
-      : SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
+    expanded ? SUBSCRIBE_EXPANDED_WINDOW_SIZE : SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
   );
 
   const startDrag = useWindowDragStart();
@@ -82,7 +84,7 @@ export function SubscribePageClient() {
     return (
       <main className="h-screen w-screen bg-transparent p-0.5">
         <SubscribeCard>
-          <div className="p-3">
+          <div className="p-2.5">
             <ErrorState
               title="Missing match id"
               message="Open this page from match details to continue."
@@ -98,7 +100,7 @@ export function SubscribePageClient() {
     return (
       <main className="h-screen w-screen bg-transparent p-0.5">
         <SubscribeCard>
-          <div className="p-3">
+          <div className="p-2.5">
             <ErrorState
               title="Widget available for live matches"
               message="This match is not live right now."
@@ -119,23 +121,23 @@ export function SubscribePageClient() {
       <SubscribeCard>
         <div className="flex h-full w-full flex-col overflow-hidden">
           <header
-            className="flex items-center justify-between border-b border-white/10 px-2 py-1.5"
+            className="flex items-center justify-between px-2 py-1.5"
             data-tauri-drag-region
           >
             <IconActionButton
               title="Back to match details"
               onClick={() => router.push(buildMatchHref("/match", matchId))}
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3.5 w-3.5" />
             </IconActionButton>
 
             <div className="flex items-center gap-1" data-no-drag>
               {isFetching ? (
                 <span
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/14 bg-black/70 text-zinc-300"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-black/60 text-zinc-400"
                   title="Refreshing"
                 >
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-3 w-3 animate-spin" />
                 </span>
               ) : null}
               <IconActionButton
@@ -143,19 +145,24 @@ export function SubscribePageClient() {
                 onClick={() => setExpanded((value) => !value)}
               >
                 {expanded ? (
-                  <Shrink className="h-4 w-4" />
+                  <Shrink className="h-3.5 w-3.5" />
                 ) : (
-                  <Expand className="h-4 w-4" />
+                  <Expand className="h-3.5 w-3.5" />
                 )}
               </IconActionButton>
               <IconActionButton title="Quit application" onClick={closeWindow}>
-                <Power className="h-4 w-4" />
+                <Power className="h-3.5 w-3.5" />
               </IconActionButton>
             </div>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-2.5 py-2.5" data-no-drag>
-            {isLoading ? <LoadingState message="Loading live widget..." /> : null}
+          <div
+            className="min-h-0 flex-1 overflow-y-auto px-2 py-1.5"
+            data-no-drag
+          >
+            {isLoading ? (
+              <LoadingState message="Loading live widget..." />
+            ) : null}
 
             {isError ? (
               <ErrorState
@@ -169,7 +176,10 @@ export function SubscribePageClient() {
 
             {!isLoading && !isError && data ? (
               expanded ? (
-                <SubscribeExpandedView detail={data} partnership={partnership} />
+                <SubscribeExpandedView
+                  detail={data}
+                  partnership={partnership}
+                />
               ) : (
                 <SubscribeCompactView detail={data} />
               )

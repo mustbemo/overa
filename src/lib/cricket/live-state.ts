@@ -152,32 +152,44 @@ function classifyBallToken(rawToken: string): BallOutcome {
   };
 }
 
-function parseOverTokensFromString(value: string): string[] {
+function parseOverTokensFromString(
+  value: string,
+  limit = 8,
+  includeAllSegments = false,
+): string[] {
   const text = value.replace(/\s+/g, " ").trim();
 
   if (!text) {
     return [];
   }
 
-  const segment =
-    text
-      .split("|")
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .at(-1) ?? text;
-  const afterLabel = segment.includes(":")
-    ? (segment.split(":").at(-1) ?? segment).trim()
-    : segment;
+  const segments = text
+    .split("|")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const sourceSegments = includeAllSegments
+    ? segments
+    : [segments.at(-1) ?? text];
+  const tokens: string[] = [];
 
-  return afterLabel
-    .split(/\s+/)
-    .map((part) => normalizeBallToken(part))
-    .filter(Boolean)
-    .filter((part) => !/^(ov|over)$/i.test(part))
-    .slice(-8);
+  for (const segment of sourceSegments) {
+    const afterLabel = segment.includes(":")
+      ? (segment.split(":").at(-1) ?? segment).trim()
+      : segment;
+
+    tokens.push(
+      ...afterLabel
+        .split(/\s+/)
+        .map((part) => normalizeBallToken(part))
+        .filter(Boolean)
+        .filter((part) => !/^(ov|over)$/i.test(part)),
+    );
+  }
+
+  return tokens.slice(-limit);
 }
 
-function parseOverTokensFromArray(values: unknown[]): string[] {
+function parseOverTokensFromArray(values: unknown[], limit = 8): string[] {
   return values
     .map((entry) => {
       if (typeof entry === "string" || typeof entry === "number") {
@@ -201,7 +213,7 @@ function parseOverTokensFromArray(values: unknown[]): string[] {
       );
     })
     .filter(Boolean)
-    .slice(-8);
+    .slice(-limit);
 }
 
 function parseOverContext(oversRaw: string): {
@@ -447,6 +459,137 @@ function extractOverTokens(candidate: RawLiveScoreCandidate): string[] {
   return [];
 }
 
+function extractRecentBallTokens(candidate: RawLiveScoreCandidate): string[] {
+  const arraySources: Array<unknown[] | undefined> = [
+    Array.isArray(candidate.recentBalls) ? candidate.recentBalls : undefined,
+    Array.isArray(candidate.latestBalls) ? candidate.latestBalls : undefined,
+    Array.isArray(candidate.lastTenBalls) ? candidate.lastTenBalls : undefined,
+    Array.isArray(candidate.last10Balls) ? candidate.last10Balls : undefined,
+    Array.isArray(candidate.recentOvsStatsArr)
+      ? candidate.recentOvsStatsArr
+      : undefined,
+  ];
+
+  for (const source of arraySources) {
+    if (!source) {
+      continue;
+    }
+
+    const parsed = parseOverTokensFromArray(source, 10);
+    if (parsed.length > 0) {
+      return parsed;
+    }
+  }
+
+  const stringSources = [
+    typeof candidate.recentBalls === "string" ? candidate.recentBalls : "",
+    typeof candidate.latestBalls === "string" ? candidate.latestBalls : "",
+    typeof candidate.lastTenBalls === "string" ? candidate.lastTenBalls : "",
+    typeof candidate.last10Balls === "string" ? candidate.last10Balls : "",
+    candidate.recentOvsStats,
+  ].filter((value): value is string => typeof value === "string" && value !== "");
+
+  for (const source of stringSources) {
+    const parsed = parseOverTokensFromString(source, 10, true);
+
+    if (parsed.length > 0) {
+      return parsed;
+    }
+  }
+
+  return [];
+}
+
+function toRecentBalls(tokens: string[]): LiveOverBall[] {
+  return tokens.slice(-10).map((token, index) => {
+    const outcome = classifyBallToken(token);
+
+    return {
+      label: `Ball ${index + 1}`,
+      value: outcome.value,
+      kind: outcome.kind,
+    };
+  });
+}
+
+function formatRecentBallsLabel(ballsCount: number): string {
+  if (ballsCount >= 10) {
+    return "Last 10 balls";
+  }
+
+  if (ballsCount > 0) {
+    return `Last ${ballsCount} balls`;
+  }
+
+  return "Current over";
+}
+
+function toBowlerKey(bowler: LiveBowler): string {
+  return `${bowler.id}:${bowler.name.toLowerCase()}`;
+}
+
+function hasBowlerStats(bowler: LiveBowler): boolean {
+  return [bowler.overs, bowler.maidens, bowler.runs, bowler.wickets].some(
+    (value) => value !== "-" && value !== "",
+  );
+}
+
+function toBowlingState(candidate: RawLiveScoreCandidate): {
+  bowler: LiveBowler | null;
+  previousBowlers: LiveBowler[];
+} {
+  const result: LiveBowler[] = [];
+  const seen = new Set<string>();
+
+  const addBowler = (rawBowler: RawLiveBowler | null): void => {
+    const parsed = toLiveBowler(rawBowler);
+
+    if (!parsed) {
+      return;
+    }
+
+    const key = toBowlerKey(parsed);
+
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    result.push(parsed);
+  };
+
+  addBowler(candidate.currentBowler ?? null);
+  addBowler(candidate.bowlerStriker ?? null);
+  addBowler(candidate.bowler ?? null);
+
+  const additionalSources = [
+    candidate.bowlTeam?.bowlers,
+    candidate.bowlTeam?.previousBowlers,
+  ];
+
+  for (const source of additionalSources) {
+    if (!Array.isArray(source)) {
+      continue;
+    }
+
+    for (const entry of source) {
+      if (!isRecord(entry)) {
+        continue;
+      }
+
+      addBowler(entry as RawLiveBowler);
+    }
+  }
+
+  const bowler = result[0] ?? null;
+  const previousBowlers = result.slice(1).filter(hasBowlerStats);
+
+  return {
+    bowler,
+    previousBowlers,
+  };
+}
+
 type ParsedCommentaryBall = {
   over: number;
   rawBall: number;
@@ -566,6 +709,42 @@ function deriveCommentaryOutcome(line: RawCommentaryBall): BallOutcome {
   return classifyBallToken(text || "-");
 }
 
+function parseCommentaryBalls(lines: RawCommentaryBall[]): ParsedCommentaryBall[] {
+  const parsed: ParsedCommentaryBall[] = [];
+
+  for (const [index, line] of lines.entries()) {
+    const overBall = parseOverBall(line);
+
+    if (!overBall) {
+      continue;
+    }
+
+    parsed.push({
+      over: overBall.over,
+      rawBall: overBall.ball,
+      outcome: deriveCommentaryOutcome(line),
+      index,
+    });
+  }
+
+  return parsed;
+}
+
+function sortCommentaryBalls(
+  left: ParsedCommentaryBall,
+  right: ParsedCommentaryBall,
+): number {
+  if (left.over !== right.over) {
+    return left.over - right.over;
+  }
+
+  if (left.rawBall !== right.rawBall) {
+    return left.rawBall - right.rawBall;
+  }
+
+  return left.index - right.index;
+}
+
 function parseCommentaryList(
   payload: RawCommentaryPayload,
 ): RawCommentaryBall[] {
@@ -589,40 +768,17 @@ function parseCommentaryList(
 }
 
 function parseCurrentOverFromCommentary(
-  lines: RawCommentaryBall[],
+  balls: ParsedCommentaryBall[],
   oversRaw?: string,
 ): LiveOverBall[] {
-  const parsed: ParsedCommentaryBall[] = [];
-
-  for (const [index, line] of lines.entries()) {
-    const overBall = parseOverBall(line);
-
-    if (!overBall) {
-      continue;
-    }
-
-    parsed.push({
-      over: overBall.over,
-      rawBall: overBall.ball,
-      outcome: deriveCommentaryOutcome(line),
-      index,
-    });
-  }
-
-  if (parsed.length === 0) {
+  if (balls.length === 0) {
     return [];
   }
 
-  const latestOver = Math.max(...parsed.map((entry) => entry.over));
-  const inOver = parsed
+  const latestOver = Math.max(...balls.map((entry) => entry.over));
+  const inOver = balls
     .filter((entry) => entry.over === latestOver)
-    .sort((a, b) => {
-      if (a.rawBall === b.rawBall) {
-        return a.index - b.index;
-      }
-
-      return a.rawBall - b.rawBall;
-    });
+    .sort(sortCommentaryBalls);
 
   if (inOver.length === 0) {
     return [];
@@ -639,11 +795,30 @@ function parseCurrentOverFromCommentary(
   );
 }
 
+function parseRecentBallsFromCommentary(
+  balls: ParsedCommentaryBall[],
+): LiveOverBall[] {
+  if (balls.length === 0) {
+    return [];
+  }
+
+  return [...balls]
+    .sort(sortCommentaryBalls)
+    .slice(-10)
+    .map((entry) => ({
+      label: `${entry.over}.${entry.rawBall}`,
+      value: entry.outcome.value,
+      kind: entry.outcome.kind,
+    }));
+}
+
 function hasContent(state: MatchLiveState): boolean {
   return (
     state.batters.length > 0 ||
     Boolean(state.bowler) ||
-    state.currentOverBalls.length > 0
+    state.previousBowlers.length > 0 ||
+    state.currentOverBalls.length > 0 ||
+    state.recentBalls.length > 0
   );
 }
 
@@ -652,7 +827,9 @@ function scoreState(state: MatchLiveState): number {
 
   score += state.batters.length * 4;
   score += state.bowler ? 4 : 0;
+  score += Math.min(state.previousBowlers.length, 4) * 2;
   score += Math.min(state.currentOverBalls.length, 8);
+  score += Math.min(state.recentBalls.length, 10);
   score += state.currentRunRate !== "-" ? 1 : 0;
   score += state.requiredRunRate !== "-" ? 1 : 0;
 
@@ -664,37 +841,28 @@ function parseCandidateState(
   fallbackCurrentOverBalls: LiveOverBall[],
 ): MatchLiveState | null {
   const batters = toLiveBatters(candidate);
-  let bowler = toLiveBowler(
-    candidate.currentBowler ??
-      candidate.bowlerStriker ??
-      candidate.bowler ??
-      null,
-  );
-
-  if (!bowler && Array.isArray(candidate.bowlTeam?.bowlers)) {
-    for (const entry of candidate.bowlTeam.bowlers) {
-      if (!isRecord(entry)) {
-        continue;
-      }
-
-      bowler = toLiveBowler(entry as RawLiveBowler);
-      if (bowler) {
-        break;
-      }
-    }
-  }
+  const bowlingState = toBowlingState(candidate);
   const oversRaw = firstNonEmpty(candidate.overs);
   const overTokens = extractOverTokens(candidate);
+  const recentTokens = extractRecentBallTokens(candidate);
   const currentOverBalls =
     overTokens.length > 0
       ? toCurrentOverBalls(overTokens, oversRaw || "0")
       : fallbackCurrentOverBalls;
+  const recentBalls =
+    recentTokens.length > 0 ? toRecentBalls(recentTokens) : currentOverBalls;
   const currentOverLabel = normalizeOversValue(oversRaw) ?? (oversRaw || "-");
 
   const state: MatchLiveState = {
     batters,
-    bowler,
+    bowler: bowlingState.bowler,
+    previousBowlers: bowlingState.previousBowlers,
     currentOverBalls,
+    recentBalls,
+    recentBallsLabel:
+      recentTokens.length > 0
+        ? formatRecentBallsLabel(recentTokens.length)
+        : "Current over",
     currentOverLabel,
     currentRunRate: toStatText(candidate.crr, candidate.currentRunRate),
     requiredRunRate: toStatText(candidate.reqRate, candidate.requiredRunRate),
@@ -818,39 +986,78 @@ export function parseLiveStateFromCommentaryPayload(
 
   const typedPayload = payload as RawCommentaryPayload;
   const commentaryLines = parseCommentaryList(typedPayload);
+  const parsedCommentaryBalls = parseCommentaryBalls(commentaryLines);
+  const commentaryCurrentOverBalls = parseCurrentOverFromCommentary(
+    parsedCommentaryBalls,
+  );
+  const commentaryRecentBalls =
+    parseRecentBallsFromCommentary(parsedCommentaryBalls);
 
   let best: MatchLiveState | null = null;
 
   for (const candidate of extractCandidatesFromPayload(typedPayload)) {
+    const commentaryCurrentForCandidate = parseCurrentOverFromCommentary(
+      parsedCommentaryBalls,
+      firstNonEmpty(candidate.overs),
+    );
     const parsed = parseCandidateState(
       candidate,
-      parseCurrentOverFromCommentary(
-        commentaryLines,
-        firstNonEmpty(candidate.overs),
-      ),
+      commentaryCurrentForCandidate,
     );
     best = pickPreferredLiveState(best, parsed);
   }
 
-  const commentaryBalls = parseCurrentOverFromCommentary(commentaryLines);
-
   if (best) {
-    return best;
+    const mergedCurrentOverBalls =
+      best.currentOverBalls.length > 0
+        ? best.currentOverBalls
+        : commentaryCurrentOverBalls;
+    const mergedRecentBalls =
+      commentaryRecentBalls.length > best.recentBalls.length
+        ? commentaryRecentBalls
+        : best.recentBalls;
+    const recentBalls = mergedRecentBalls.length
+      ? mergedRecentBalls
+      : mergedCurrentOverBalls;
+
+    return {
+      ...best,
+      currentOverBalls: mergedCurrentOverBalls,
+      recentBalls,
+      recentBallsLabel:
+        commentaryRecentBalls.length > 0
+          ? formatRecentBallsLabel(commentaryRecentBalls.length)
+          : recentBalls.length > 0
+            ? best.recentBallsLabel
+            : "Current over",
+    };
   }
 
-  if (commentaryBalls.length === 0) {
+  if (
+    commentaryCurrentOverBalls.length === 0 &&
+    commentaryRecentBalls.length === 0
+  ) {
     return null;
   }
 
   const overLabel =
-    commentaryBalls[0]?.label.split(".")[0] ??
-    commentaryBalls.at(-1)?.label.split(".")[0] ??
+    commentaryCurrentOverBalls[0]?.label.split(".")[0] ??
+    commentaryCurrentOverBalls.at(-1)?.label.split(".")[0] ??
     "-";
+  const recentBalls = commentaryRecentBalls.length
+    ? commentaryRecentBalls
+    : commentaryCurrentOverBalls;
 
   return {
     batters: [],
     bowler: null,
-    currentOverBalls: commentaryBalls,
+    previousBowlers: [],
+    currentOverBalls: commentaryCurrentOverBalls,
+    recentBalls,
+    recentBallsLabel:
+      commentaryRecentBalls.length > 0
+        ? formatRecentBallsLabel(commentaryRecentBalls.length)
+        : "Current over",
     currentOverLabel: overLabel,
     currentRunRate: "-",
     requiredRunRate: "-",

@@ -72,51 +72,46 @@ export default function HomePage() {
       onMouseDown={startDrag}
       data-tauri-drag-region
     >
-      <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[20px] border border-white/20 bg-slate-950/70 backdrop-blur-2xl">
+      <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[18px] border border-white/12 bg-slate-950/70 backdrop-blur-2xl px-1 pb-1">
         <header
-          className="flex items-start justify-between gap-2 border-b border-white/10 px-3 py-2.5"
+          className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/8"
           data-tauri-drag-region
         >
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-200/90">
-              CricLive Widget
-            </p>
-            <p className="mt-0.5 text-[11px] text-slate-300/80">
-              Floating desktop scoreboard
-            </p>
-          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-200/80">
+            CricLive
+          </p>
 
           <div className="flex items-center gap-1" data-no-drag>
             <button
               type="button"
               onClick={closeWindow}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition hover:border-white/20 hover:bg-white/10"
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/8 bg-white/4 text-slate-300 transition hover:border-white/16 hover:bg-white/8 hover:text-slate-100"
               aria-label="Close app"
               data-no-drag
             >
-              <Power className="h-3.5 w-3.5" />
+              <Power className="h-3 w-3" />
             </button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-2 py-2" data-no-drag>
-          <nav className="mb-3 grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-white/3 p-1">
+        <div className="flex-1 overflow-y-auto px-2 py-1.5" data-no-drag>
+          <nav className="mb-2.5 grid grid-cols-3 gap-0.5 rounded-lg border border-white/8 bg-white/3 p-0.5">
             {MATCH_TABS.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => setSelectedTab(tab.key)}
                 className={cn(
-                  "rounded-lg px-2 py-1 text-[10px] transition",
+                  "rounded-md px-2 py-1 text-[9px] font-medium transition",
                   activeTab === tab.key
-                    ? "bg-white/15 text-slate-100"
-                    : "text-slate-300/80 hover:bg-white/10 hover:text-slate-100",
+                    ? "bg-white/12 text-slate-100"
+                    : "text-slate-400 hover:bg-white/8 hover:text-slate-200",
                 )}
                 data-no-drag
               >
                 <span>{tab.label}</span>
-                <span className="ml-1 text-[10px] text-slate-300/70">
-                  ({counts[tab.key]})
+                <span className="ml-1 text-[9px] opacity-60">
+                  {counts[tab.key]}
                 </span>
               </button>
             ))}
@@ -142,7 +137,7 @@ export default function HomePage() {
           ) : null}
 
           {!isLoading && !isError && matches.length > 0 ? (
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {matches.map((match) => (
                 <MatchCard key={match.id} match={match} />
               ))}
@@ -151,25 +146,20 @@ export default function HomePage() {
         </div>
 
         <footer
-          className="flex items-center justify-between border-t border-white/10 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-slate-300/70"
+          className="flex items-center justify-between border-t border-white/6 px-3 py-1.5 text-[9px] tracking-[0.16em] text-slate-400/60"
           data-tauri-drag-region
         >
-          <button
-            type="button"
-            onClick={() => {
-              void refetch();
-            }}
-            className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-1 font-semibold text-slate-200 transition hover:border-white/20 hover:bg-white/10"
-            aria-label="Refresh now"
-            data-no-drag
-          >
-            {isFetching ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <RefreshCcw className="h-3.5 w-3.5" />
-            )}
-            Refresh
-          </button>
+          <div>
+            Made by{" "}
+            <a
+              href="https://mohammeddanish.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400 hover:text-slate-200"
+            >
+              Danish
+            </a>
+          </div>
           <span>v0.1.0</span>
         </footer>
       </section>

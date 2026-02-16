@@ -166,27 +166,31 @@ function deriveLiveStateFromInnings(
     onStrike: index === 0,
   }));
 
-  const bowlerSource = activeInnings.bowlers[0];
-  const bowler = bowlerSource
-    ? {
-        id: `${normalizePlayerKey(bowlerSource.name)}-1`,
-        name: bowlerSource.name,
-        overs: bowlerSource.overs,
-        maidens: bowlerSource.maidens,
-        runs: bowlerSource.runs,
-        wickets: bowlerSource.wickets,
-        economy: bowlerSource.economy,
-      }
-    : null;
+  const bowlingState = activeInnings.bowlers.map((bowlerSource, index) => ({
+    id: `${normalizePlayerKey(bowlerSource.name)}-${index + 1}`,
+    name: bowlerSource.name,
+    overs: bowlerSource.overs,
+    maidens: bowlerSource.maidens,
+    runs: bowlerSource.runs,
+    wickets: bowlerSource.wickets,
+    economy: bowlerSource.economy,
+  }));
+  const bowler = bowlingState[0] ?? null;
+  const previousBowlers = bowlingState.slice(1);
 
   if (batters.length === 0 && !bowler) {
     return null;
   }
 
+  const currentOverBalls: MatchLiveState["currentOverBalls"] = [];
+
   return {
     batters,
     bowler,
-    currentOverBalls: [],
+    previousBowlers,
+    currentOverBalls,
+    recentBalls: currentOverBalls,
+    recentBallsLabel: "Current over",
     currentOverLabel: parseOversFromScoreLine(activeInnings.scoreLine),
     currentRunRate: activeInnings.runRate || "-",
     requiredRunRate: "-",
@@ -266,9 +270,7 @@ function buildMatchItemFromSummary(summary: MatchSummary): MatchListItem {
   const team2Short = safeText(summary.team2ShortName) || getShortName(team2);
   const matchDesc = safeText(summary.matchDesc);
   const status = pickBestStatus(summary.status, summary.state);
-  const titleBase = `${team1} vs ${team2}${matchDesc ? `, ${matchDesc}` : ""}`;
-  const title =
-    status && status !== "-" ? `${titleBase} - ${status}` : titleBase;
+  const title = `${team1} vs ${team2}${matchDesc ? `, ${matchDesc}` : ""}`;
   const team1Score = safeText(summary.team1Score);
   const team2Score = safeText(summary.team2Score);
 

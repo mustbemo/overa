@@ -67,7 +67,10 @@ export type LiveOverBall = {
 export type MatchLiveState = {
   batters: LiveBatter[];
   bowler: LiveBowler | null;
+  previousBowlers: LiveBowler[];
   currentOverBalls: LiveOverBall[];
+  recentBalls: LiveOverBall[];
+  recentBallsLabel: string;
   currentOverLabel: string;
   currentRunRate: string;
   requiredRunRate: string;

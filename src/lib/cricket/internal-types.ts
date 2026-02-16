@@ -243,6 +243,10 @@ export type RawLiveScoreCandidate = {
   requiredRunRate?: number | string;
   recentOvsStats?: string;
   recentOvsStatsArr?: unknown[];
+  recentBalls?: string | unknown[];
+  latestBalls?: string | unknown[];
+  lastTenBalls?: string | unknown[];
+  last10Balls?: string | unknown[];
   currentOver?: string | unknown[];
   thisOver?: string | unknown[];
   overSummary?: string | unknown[];
@@ -262,6 +266,7 @@ export type RawLiveScoreCandidate = {
   currentBowler?: RawLiveBowler;
   bowlTeam?: {
     bowlers?: unknown[];
+    previousBowlers?: unknown[];
   };
   batTeam?: {
     batsmen?: unknown[];

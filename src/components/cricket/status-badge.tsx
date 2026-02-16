@@ -2,9 +2,9 @@ import { cn } from "@/lib/classnames";
 import type { MatchStatusType } from "@/lib/types";
 
 const STATUS_STYLE: Record<MatchStatusType, string> = {
-  live: "border-white/25 bg-white/12 text-white",
-  upcoming: "border-zinc-500/35 bg-zinc-700/25 text-zinc-200",
-  complete: "border-zinc-600/35 bg-zinc-700/20 text-zinc-300",
+  live: "border-white/20 bg-emerald-500/10 text-emerald-200/80",
+  upcoming: "border-white/20 bg-yellow-500/10 text-yellow-500/80",
+  complete: "border-white/20 bg-blue-500/10 text-blue-200/80",
 };
 
 const STATUS_LABEL: Record<MatchStatusType, string> = {
@@ -25,8 +25,8 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold uppercase tracking-wide",
-        compact ? "text-[10px]" : "text-[11px]",
+        "flex items-center justify-center gap-1 rounded-md px-1.5 py-px pt-1 font-medium uppercase tracking-wide",
+        compact ? "text-[9px]" : "text-[10px]",
         STATUS_STYLE[statusType],
       )}
       title={status}

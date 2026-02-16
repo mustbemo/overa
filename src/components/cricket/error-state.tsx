@@ -10,16 +10,16 @@ export function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-100">
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+    <div className="rounded-xl border border-rose-400/25 bg-rose-500/8 p-3 text-[11px] text-rose-100">
+      <div className="flex items-start gap-2.5">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <div className="min-w-0">
-          <p className="font-semibold">{title}</p>
-          <p className="mt-1 text-rose-100/80">{message}</p>
+          <p className="font-medium">{title}</p>
+          <p className="mt-0.5 text-rose-100/70">{message}</p>
           {onRetry ? (
             <button
               type="button"
-              className="mt-3 rounded-lg border border-rose-300/50 px-3 py-1 text-xs font-semibold text-rose-50 transition hover:bg-rose-500/15"
+              className="mt-2 rounded-md border border-rose-300/40 px-2.5 py-0.5 text-[10px] font-medium text-rose-50 transition hover:bg-rose-500/12"
               onClick={onRetry}
               data-no-drag
             >

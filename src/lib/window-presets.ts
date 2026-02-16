@@ -4,21 +4,21 @@ export type WindowPreset = {
 };
 
 export const HOME_WINDOW_SIZE: WindowPreset = {
-  width: 420,
-  height: 620,
+  width: 400,
+  height: 580,
 };
 
 export const MATCH_WINDOW_SIZE: WindowPreset = {
-  width: 500,
-  height: 760,
+  width: 480,
+  height: 720,
 };
 
 export const SUBSCRIBE_COLLAPSED_WINDOW_SIZE: WindowPreset = {
-  width: 384,
-  height: 196,
+  width: 340,
+  height: 176,
 };
 
 export const SUBSCRIBE_EXPANDED_WINDOW_SIZE: WindowPreset = {
-  width: 476,
-  height: 560,
+  width: 460,
+  height: 540,
 };
