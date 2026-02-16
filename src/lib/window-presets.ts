@@ -20,7 +20,7 @@ export const SUBSCRIBE_COLLAPSED_WINDOW_SIZE: WindowPreset = {
 
 export const SUBSCRIBE_COLLAPSED_HOVER_WINDOW_SIZE: WindowPreset = {
   width: 340,
-  height: 132,
+  height: 250,
 };
 
 export const SUBSCRIBE_EXPANDED_WINDOW_SIZE: WindowPreset = {
