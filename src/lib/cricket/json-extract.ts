@@ -45,8 +45,16 @@ export function parseEscapedJsonObject<T>(rawObjectText: string): T | null {
   }
 }
 
-export function pickEscapedObjectByKey<T>(html: string, key: string): T | null {
-  const tokens = [`\\"${key}\\":{`, `"${key}":{`];
+function collectEscapedByKey<T>(
+  html: string,
+  key: string,
+  openToken: "{" | "[",
+): T[] {
+  const tokens =
+    openToken === "{"
+      ? [`\\"${key}\\":{`, `"${key}":{`]
+      : [`\\"${key}\\":[`, `"${key}":[`];
+  const results: T[] = [];
 
   for (const token of tokens) {
     let searchFrom = 0;
@@ -58,7 +66,7 @@ export function pickEscapedObjectByKey<T>(html: string, key: string): T | null {
         break;
       }
 
-      const objectStart = html.indexOf("{", tokenIndex + token.length - 1);
+      const objectStart = html.indexOf(openToken, tokenIndex + token.length - 1);
 
       if (objectStart < 0) {
         break;
@@ -73,53 +81,31 @@ export function pickEscapedObjectByKey<T>(html: string, key: string): T | null {
 
       const parsed = parseEscapedJsonObject<T>(balanced.objectText);
       if (parsed) {
-        return parsed;
+        results.push(parsed);
       }
 
       searchFrom = balanced.endIndex;
     }
   }
 
-  return null;
+  return results;
+}
+
+export function pickAllEscapedObjectsByKey<T>(html: string, key: string): T[] {
+  return collectEscapedByKey<T>(html, key, "{");
+}
+
+export function pickEscapedObjectByKey<T>(html: string, key: string): T | null {
+  return pickAllEscapedObjectsByKey<T>(html, key).at(0) ?? null;
+}
+
+export function pickAllEscapedArraysByKey<T>(html: string, key: string): T[][] {
+  return collectEscapedByKey<T[]>(html, key, "[");
 }
 
 export function pickEscapedArrayByKey<T>(
   html: string,
   key: string,
 ): T[] | null {
-  const tokens = [`\\"${key}\\":[`, `"${key}":[`];
-
-  for (const token of tokens) {
-    let searchFrom = 0;
-
-    while (searchFrom < html.length) {
-      const tokenIndex = html.indexOf(token, searchFrom);
-
-      if (tokenIndex < 0) {
-        break;
-      }
-
-      const arrayStart = html.indexOf("[", tokenIndex + token.length - 1);
-
-      if (arrayStart < 0) {
-        break;
-      }
-
-      const balanced = extractBalancedObject(html, arrayStart);
-
-      if (!balanced) {
-        searchFrom = tokenIndex + token.length;
-        continue;
-      }
-
-      const parsed = parseEscapedJsonObject<T[]>(balanced.objectText);
-      if (parsed) {
-        return parsed;
-      }
-
-      searchFrom = balanced.endIndex;
-    }
-  }
-
-  return null;
+  return pickAllEscapedArraysByKey<T>(html, key).at(0) ?? null;
 }

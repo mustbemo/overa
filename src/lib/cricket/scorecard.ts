@@ -15,7 +15,10 @@ import type {
   RawScorecardInnings,
   RawWicket,
 } from "./internal-types";
-import { pickEscapedArrayByKey, pickEscapedObjectByKey } from "./json-extract";
+import {
+  pickAllEscapedArraysByKey,
+  pickAllEscapedObjectsByKey,
+} from "./json-extract";
 import { getShortName, parseTitleMeta } from "./match-links";
 import {
   formatOversLabel,
@@ -61,37 +64,204 @@ function shouldIncludeBatter(player: RawBatsman): boolean {
   return dismissal.length > 0;
 }
 
+function normalizeTeamKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+}
+
+function teamNamesLikelyMatch(
+  inningsTeamName: string,
+  teamName: string,
+  teamShortName: string,
+): boolean {
+  const inningsKey = normalizeTeamKey(inningsTeamName);
+  const teamKey = normalizeTeamKey(teamName);
+  const shortKey = normalizeTeamKey(teamShortName);
+
+  if (!inningsKey) {
+    return false;
+  }
+
+  return (
+    inningsKey === teamKey ||
+    inningsKey === shortKey ||
+    (teamKey.length > 3 &&
+      (inningsKey.includes(teamKey) || teamKey.includes(inningsKey))) ||
+    (shortKey.length > 1 &&
+      (inningsKey.includes(shortKey) || shortKey.includes(inningsKey)))
+  );
+}
+
+function addScoreForTeam(
+  runsByTeam: Map<string, string[]>,
+  teamName: string,
+  score: string,
+): void {
+  const key = normalizeTeamKey(teamName);
+
+  if (!key) {
+    return;
+  }
+
+  const existing = runsByTeam.get(key) ?? [];
+  existing.push(score);
+  runsByTeam.set(key, existing);
+}
+
 function formatTeamScoresFromScorecard(
   scoreCard: RawScorecardInnings[],
 ): Map<string, string> {
   const runsByTeam = new Map<string, string[]>();
 
   for (const innings of scoreCard) {
-    const teamName =
-      innings.batTeamDetails?.batTeamName ??
-      innings.batTeamDetails?.batTeamShortName;
-
-    if (!teamName) {
-      continue;
-    }
+    const teamName = safeText(innings.batTeamDetails?.batTeamName);
+    const teamShortName = safeText(innings.batTeamDetails?.batTeamShortName);
 
     const runs = innings.scoreDetails?.runs ?? "-";
     const wickets = innings.scoreDetails?.wickets ?? "-";
     const overs = formatOversLabel(innings.scoreDetails?.overs);
     const score = `${runs}/${wickets} (${overs})`;
 
-    const existing = runsByTeam.get(teamName) ?? [];
-    existing.push(score);
-    runsByTeam.set(teamName, existing);
+    if (teamName) {
+      addScoreForTeam(runsByTeam, teamName, score);
+    }
+
+    if (teamShortName && teamShortName !== teamName) {
+      addScoreForTeam(runsByTeam, teamShortName, score);
+    }
   }
 
   const result = new Map<string, string>();
 
-  for (const [teamName, scores] of runsByTeam.entries()) {
-    result.set(teamName.toLowerCase(), scores.join(" & "));
+  for (const [teamKey, scores] of runsByTeam.entries()) {
+    result.set(teamKey, scores.join(" & "));
   }
 
   return result;
+}
+
+function getScoreForTeam(
+  teamScoreMap: Map<string, string>,
+  teamName: string,
+  teamShortName: string,
+): string {
+  const directKeys = [
+    normalizeTeamKey(teamName),
+    normalizeTeamKey(teamShortName),
+  ].filter(Boolean);
+
+  for (const key of directKeys) {
+    const direct = teamScoreMap.get(key);
+
+    if (direct) {
+      return direct;
+    }
+  }
+
+  for (const key of directKeys) {
+    if (key.length < 3) {
+      continue;
+    }
+
+    const fallbackEntry = Array.from(teamScoreMap.entries()).find(
+      ([candidate]) =>
+        candidate.includes(key) || (key.length > 4 && key.includes(candidate)),
+    );
+
+    if (fallbackEntry?.[1]) {
+      return fallbackEntry[1];
+    }
+  }
+
+  return "";
+}
+
+function inferYetToBatScore(
+  scoreCard: RawScorecardInnings[],
+  teamName: string,
+  teamShortName: string,
+): string {
+  if (scoreCard.length !== 1) {
+    return "";
+  }
+
+  const onlyInnings = scoreCard[0];
+  const battingTeamName =
+    safeText(onlyInnings?.batTeamDetails?.batTeamName) ||
+    safeText(onlyInnings?.batTeamDetails?.batTeamShortName);
+
+  if (!battingTeamName) {
+    return "";
+  }
+
+  return teamNamesLikelyMatch(battingTeamName, teamName, teamShortName)
+    ? ""
+    : "Yet to bat";
+}
+
+function scorecardTeamMatchScore(
+  scoreCard: RawScorecardInnings[],
+  teamNames: string[],
+): number {
+  const targets = teamNames
+    .map((team) => normalizeTeamKey(team))
+    .filter((team) => team.length > 1);
+
+  if (targets.length === 0) {
+    return scoreCard.length;
+  }
+
+  let score = scoreCard.length;
+
+  for (const innings of scoreCard) {
+    const keys = [
+      normalizeTeamKey(safeText(innings.batTeamDetails?.batTeamName)),
+      normalizeTeamKey(safeText(innings.batTeamDetails?.batTeamShortName)),
+      normalizeTeamKey(safeText(innings.bowlTeamDetails?.bowlTeamName)),
+      normalizeTeamKey(safeText(innings.bowlTeamDetails?.bowlTeamShortName)),
+    ].filter(Boolean);
+
+    for (const candidate of keys) {
+      for (const target of targets) {
+        if (
+          candidate === target ||
+          (target.length > 3 && candidate.includes(target)) ||
+          (candidate.length > 3 && target.includes(candidate))
+        ) {
+          score += 2;
+          break;
+        }
+      }
+    }
+  }
+
+  return score;
+}
+
+function pickBestScoreCard(
+  scoreCardCandidates: RawScorecardInnings[][],
+  teamNames: string[],
+): RawScorecardInnings[] {
+  if (scoreCardCandidates.length === 0) {
+    return [];
+  }
+
+  let best: RawScorecardInnings[] = [];
+  let bestScore = -1;
+
+  for (const candidate of scoreCardCandidates) {
+    if (candidate.length === 0) {
+      continue;
+    }
+
+    const score = scorecardTeamMatchScore(candidate, teamNames);
+
+    if (score > bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+  }
+
+  return bestScore >= 0 ? best : [];
 }
 
 function toTeamSnapshot(
@@ -215,19 +385,34 @@ export function parseScorecardDetails(
   fallbackSummary: MatchSummary | null,
   fallbackTitle: string | null,
 ): MatchDetailData {
-  const matchHeader = pickEscapedObjectByKey<RawMatchHeader>(
+  const matchHeaderCandidates = pickAllEscapedObjectsByKey<RawMatchHeader>(
     scorecardHtml,
     "matchHeader",
   );
-  const matchInfo = pickEscapedObjectByKey<RawMatchInfo>(
+  const parsedMatchId = Number(id);
+  const matchHeader =
+    matchHeaderCandidates.find((entry) => {
+      const matchId = Number(entry.matchId ?? "");
+      return Number.isFinite(matchId) && matchId === parsedMatchId;
+    }) ??
+    matchHeaderCandidates.at(0) ??
+    null;
+  const matchInfo =
+    pickAllEscapedObjectsByKey<RawMatchInfo>(
+      scorecardHtml,
+      "matchInfo",
+    ).at(0) ?? null;
+  const scoreCardCandidates = pickAllEscapedArraysByKey<RawScorecardInnings>(
     scorecardHtml,
-    "matchInfo",
+    "scoreCard",
   );
-  const scoreCard =
-    pickEscapedArrayByKey<RawScorecardInnings>(scorecardHtml, "scoreCard") ??
-    [];
-
-  const teamScoreMap = formatTeamScoresFromScorecard(scoreCard);
+  const expectedTeamNames = [
+    safeText(matchHeader?.team1?.name),
+    safeText(matchHeader?.team2?.name),
+    safeText(fallbackSummary?.team1),
+    safeText(fallbackSummary?.team2),
+  ].filter(Boolean);
+  const scoreCard = pickBestScoreCard(scoreCardCandidates, expectedTeamNames);
 
   const team1Name =
     safeText(matchHeader?.team1?.name) ||
@@ -266,14 +451,48 @@ export function parseScorecardDetails(
       ? `${matchHeader.tossResults.tossWinnerName} opted to ${matchHeader.tossResults.decision}`
       : "-";
 
-  const team1Score =
-    safeText(fallbackSummary?.team1Score) ||
-    teamScoreMap.get(team1Name.toLowerCase()) ||
-    "";
-  const team2Score =
-    safeText(fallbackSummary?.team2Score) ||
-    teamScoreMap.get(team2Name.toLowerCase()) ||
-    "";
+  const teamScoreMap = formatTeamScoresFromScorecard(scoreCard);
+  const scoreFromScorecardTeam1 = getScoreForTeam(
+    teamScoreMap,
+    team1Name,
+    team1Short,
+  );
+  const scoreFromScorecardTeam2 = getScoreForTeam(
+    teamScoreMap,
+    team2Name,
+    team2Short,
+  );
+  const fallbackTeam1Score = safeText(fallbackSummary?.team1Score);
+  const fallbackTeam2Score = safeText(fallbackSummary?.team2Score);
+
+  let team1Score =
+    scoreFromScorecardTeam1 ||
+    fallbackTeam1Score ||
+    inferYetToBatScore(scoreCard, team1Name, team1Short);
+  let team2Score =
+    scoreFromScorecardTeam2 ||
+    fallbackTeam2Score ||
+    inferYetToBatScore(scoreCard, team2Name, team2Short);
+
+  if (
+    scoreCard.length === 1 &&
+    team1Score &&
+    team2Score &&
+    team1Score === team2Score
+  ) {
+    const battingTeamName =
+      safeText(scoreCard[0]?.batTeamDetails?.batTeamName) ||
+      safeText(scoreCard[0]?.batTeamDetails?.batTeamShortName);
+
+    if (teamNamesLikelyMatch(battingTeamName, team1Name, team1Short)) {
+      team2Score = inferYetToBatScore(scoreCard, team2Name, team2Short);
+    } else if (teamNamesLikelyMatch(battingTeamName, team2Name, team2Short)) {
+      team1Score = inferYetToBatScore(scoreCard, team1Name, team1Short);
+    }
+  }
+
+  team1Score = team1Score || "-";
+  team2Score = team2Score || "-";
 
   const innings = toDisplayInnings(scoreCard);
 
