@@ -83,7 +83,7 @@ export default function HomePage() {
     >
       <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[18px] border border-white/12 bg-slate-950/70 backdrop-blur-2xl px-1 pb-1">
         <header
-          className="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/8"
+          className="flex cursor-grab items-center justify-between gap-2 border-b border-white/8 px-3 py-2 active:cursor-grabbing"
           data-tauri-drag-region
         >
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-200/80">
@@ -94,7 +94,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={closeWindow}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/8 bg-white/4 text-slate-300 transition hover:border-white/16 hover:bg-white/8 hover:text-slate-100"
+              className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-white/8 bg-white/4 text-slate-300 transition hover:border-white/16 hover:bg-white/8 hover:text-slate-100"
               aria-label="Close app"
               data-no-drag
             >

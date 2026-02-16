@@ -1,25 +1,27 @@
 "use client";
 
-import { ArrowLeft, Expand, Loader2, Power, Shrink } from "lucide-react";
+import { ArrowLeft, Expand, Shrink } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
+import { formatMatchTitle } from "@/components/cricket/match-details-tabs";
 import { SubscribeCompactView } from "@/components/cricket/subscribe-compact-view";
 import { SubscribeExpandedView } from "@/components/cricket/subscribe-expanded-view";
 import {
   useSyncWindowSize,
-  useWindowClose,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
+import { cn } from "@/lib/classnames";
 import { buildMatchHref, getStatusType } from "@/lib/cricket-ui";
 import { useMatchDetailQuery } from "@/lib/cricket-query";
 import {
+  SUBSCRIBE_COLLAPSED_HOVER_WINDOW_SIZE,
   SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
   SUBSCRIBE_EXPANDED_WINDOW_SIZE,
 } from "@/lib/window-presets";
 
-function IconActionButton({
+function HeaderActionButton({
   title,
   onClick,
   children,
@@ -34,7 +36,7 @@ function IconActionButton({
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-black/60 text-zinc-300 transition hover:border-white/20 hover:bg-zinc-800 hover:text-white"
+      className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-slate-300 transition hover:border-white/16 hover:bg-white/8"
       data-no-drag
     >
       {children}
@@ -44,7 +46,7 @@ function IconActionButton({
 
 function SubscribeCard({ children }: { children: React.ReactNode }) {
   return (
-    <section className="h-full w-full rounded-[16px] border border-white/12 bg-zinc-950/92">
+    <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[22px] border border-white/16 bg-slate-950/70 backdrop-blur-2xl">
       {children}
     </section>
   );
@@ -56,15 +58,20 @@ export function SubscribePageClient() {
   const matchId = searchParams.get("matchId") ?? "";
 
   const [expanded, setExpanded] = useState(false);
+  const [isCompactHovered, setIsCompactHovered] = useState(false);
+  const showCompactHeader = !expanded && isCompactHovered;
 
   useSyncWindowSize(
-    expanded ? SUBSCRIBE_EXPANDED_WINDOW_SIZE : SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
+    expanded
+      ? SUBSCRIBE_EXPANDED_WINDOW_SIZE
+      : showCompactHeader
+        ? SUBSCRIBE_COLLAPSED_HOVER_WINDOW_SIZE
+        : SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
   );
 
   const startDrag = useWindowDragStart();
-  const closeWindow = useWindowClose();
 
-  const { data, error, isError, isLoading, isFetching, refetch } =
+  const { data, error, isError, isLoading, refetch } =
     useMatchDetailQuery(matchId);
 
   const statusType = data ? getStatusType(data.status) : "upcoming";
@@ -108,45 +115,60 @@ export function SubscribePageClient() {
       data-tauri-drag-region
     >
       <SubscribeCard>
-        <div className="flex h-full w-full flex-col overflow-hidden">
-          <header
-            className="flex items-center justify-between px-2 py-1.5"
-            data-tauri-drag-region
-          >
-            <IconActionButton
-              title="Back to match details"
-              onClick={() => router.push(buildMatchHref("/match", matchId))}
+        <div
+          className="relative flex h-full w-full flex-col"
+          onMouseEnter={() => {
+            if (!expanded) {
+              setIsCompactHovered(true);
+            }
+          }}
+          onMouseLeave={() => {
+            if (!expanded) {
+              setIsCompactHovered(false);
+            }
+          }}
+        >
+          {expanded || showCompactHeader ? (
+            <header
+              className="flex cursor-grab items-center justify-between gap-1 border-b border-white/8 px-3 py-2 active:cursor-grabbing"
+              data-tauri-drag-region
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
-            </IconActionButton>
-
-            <div className="flex items-center gap-1" data-no-drag>
-              {isFetching ? (
-                <span
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-black/60 text-zinc-400"
-                  title="Refreshing"
-                >
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                </span>
-              ) : null}
-              <IconActionButton
-                title={expanded ? "Collapse widget" : "Expand widget"}
-                onClick={() => setExpanded((value) => !value)}
+              <HeaderActionButton
+                title="Back to match details"
+                onClick={() => router.push(buildMatchHref("/match", matchId))}
               >
-                {expanded ? (
-                  <Shrink className="h-3.5 w-3.5" />
-                ) : (
-                  <Expand className="h-3.5 w-3.5" />
-                )}
-              </IconActionButton>
-              <IconActionButton title="Quit application" onClick={closeWindow}>
-                <Power className="h-3.5 w-3.5" />
-              </IconActionButton>
-            </div>
-          </header>
+                <ArrowLeft className="h-3.5 w-3.5" />
+              </HeaderActionButton>
+
+              <div className="min-w-0 flex-1 px-1">
+                <p className="truncate text-[11px] font-medium text-slate-100">
+                  {data ? formatMatchTitle(data) : "Loading..."}
+                </p>
+                <p className="truncate text-[9px] text-slate-400">
+                  {data?.series || "Series"}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1" data-no-drag>
+                <HeaderActionButton
+                  title={expanded ? "Collapse widget" : "Expand widget"}
+                  onClick={() => setExpanded((value) => !value)}
+                >
+                  {expanded ? (
+                    <Shrink className="h-3.5 w-3.5" />
+                  ) : (
+                    <Expand className="h-3.5 w-3.5" />
+                  )}
+                </HeaderActionButton>
+              </div>
+            </header>
+          ) : null}
 
           <div
-            className="min-h-0 flex-1 overflow-y-auto px-2 py-1.5"
+            className={cn(
+              "min-h-0 flex-1 overflow-y-auto",
+              expanded || showCompactHeader ? "px-2.5 py-2.5" : "px-1.5 py-1.5",
+            )}
             data-no-drag
           >
             {isLoading ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
@@ -12,7 +12,7 @@ import {
   useSyncWindowSize,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
-import { buildMatchHref } from "@/lib/cricket-ui";
+import { buildMatchHref, getStatusType } from "@/lib/cricket-ui";
 import { useMatchDetailQuery } from "@/lib/cricket-query";
 import { MATCH_WINDOW_SIZE } from "@/lib/window-presets";
 
@@ -25,8 +25,9 @@ export function MatchPageClient() {
 
   const startDrag = useWindowDragStart();
 
-  const { data, error, isError, isLoading, isFetching, refetch } =
+  const { data, error, isError, isLoading, refetch } =
     useMatchDetailQuery(matchId);
+  const isLive = data ? getStatusType(data.status) === "live" : false;
 
   if (!matchId) {
     return (
@@ -50,13 +51,13 @@ export function MatchPageClient() {
     >
       <section className="glass-frame flex h-full w-full flex-col overflow-hidden rounded-[22px] border border-white/16 bg-slate-950/70 backdrop-blur-2xl">
         <header
-          className="flex items-center justify-between gap-1 border-b border-white/8 px-3 py-2"
+          className="flex cursor-grab items-center justify-between gap-1 border-b border-white/8 px-3 py-2 active:cursor-grabbing"
           data-tauri-drag-region
         >
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-300 transition hover:border-white/16 hover:bg-white/8"
+            className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-slate-300 transition hover:border-white/16 hover:bg-white/8"
             aria-label="Back to home"
             data-no-drag
           >
@@ -72,8 +73,17 @@ export function MatchPageClient() {
             </p>
           </div>
 
-          {isFetching ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-300" />
+          {isLive && data ? (
+            <button
+              type="button"
+              onClick={() => router.push(buildMatchHref("/subscribe", data.id))}
+              className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-medium text-emerald-200 transition hover:bg-emerald-500/20"
+              title="Subscribe floating widget"
+              data-no-drag
+            >
+              <Bell className="h-2.5 w-2.5" />
+              Widget
+            </button>
           ) : (
             <span className="h-3.5 w-3.5" />
           )}
@@ -98,14 +108,7 @@ export function MatchPageClient() {
           ) : null}
 
           {!isLoading && !isError && data ? (
-            <MatchDetailsTabs
-              key={data.id}
-              detail={data}
-              showSubscribeButton
-              onSubscribe={() =>
-                router.push(buildMatchHref("/subscribe", data.id))
-              }
-            />
+            <MatchDetailsTabs key={data.id} detail={data} />
           ) : null}
         </div>
       </section>

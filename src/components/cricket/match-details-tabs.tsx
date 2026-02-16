@@ -1,6 +1,5 @@
 "use client";
 
-import { Bell } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/classnames";
 import { getStatusType } from "@/lib/cricket-ui";
@@ -334,12 +333,8 @@ function WinPredictionBar({
 
 export function MatchDetailsTabs({
   detail,
-  showSubscribeButton = false,
-  onSubscribe,
 }: {
   detail: MatchDetailData;
-  showSubscribeButton?: boolean;
-  onSubscribe?: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<DetailTabKey>("live");
   const [scorecardTab, setScorecardTab] = useState<InningsTabKey>(() =>
@@ -348,7 +343,6 @@ export function MatchDetailsTabs({
 
   const statusType = getStatusType(detail.status);
   const isLive = statusType === "live";
-  const displayTitle = formatMatchTitle(detail);
 
   const inningsByTeam = useMemo(() => groupInningsByTeam(detail), [detail]);
   const currentRunRate = detail.liveState?.currentRunRate || "-";
@@ -668,16 +662,6 @@ export function MatchDetailsTabs({
           </div>
 
           {/* Subscribe Button */}
-          {showSubscribeButton && isLive ? (
-            <button
-              type="button"
-              onClick={onSubscribe}
-              className="mt-2.5 inline-flex items-center gap-1.5 rounded-md border border-emerald-400/25 bg-emerald-500/12 px-2.5 py-1 text-[10px] font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
-            >
-              <Bell className="h-3 w-3" />
-              Subscribe Floating Widget
-            </button>
-          ) : null}
         </section>
       ) : null}
 
