@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Expand, Loader2, Power, Shrink } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
 import { SubscribeCompactView } from "@/components/cricket/subscribe-compact-view";
@@ -12,11 +12,7 @@ import {
   useWindowClose,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
-import {
-  buildMatchHref,
-  getPartnership,
-  getStatusType,
-} from "@/lib/cricket-ui";
+import { buildMatchHref, getStatusType } from "@/lib/cricket-ui";
 import { useMatchDetailQuery } from "@/lib/cricket-query";
 import {
   SUBSCRIBE_COLLAPSED_WINDOW_SIZE,
@@ -72,13 +68,6 @@ export function SubscribePageClient() {
     useMatchDetailQuery(matchId);
 
   const statusType = data ? getStatusType(data.status) : "upcoming";
-
-  const partnership = useMemo(() => {
-    if (!data) {
-      return "-";
-    }
-    return getPartnership(data);
-  }, [data]);
 
   if (!matchId) {
     return (
@@ -176,10 +165,7 @@ export function SubscribePageClient() {
 
             {!isLoading && !isError && data ? (
               expanded ? (
-                <SubscribeExpandedView
-                  detail={data}
-                  partnership={partnership}
-                />
+                <SubscribeExpandedView detail={data} />
               ) : (
                 <SubscribeCompactView detail={data} />
               )

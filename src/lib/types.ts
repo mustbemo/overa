@@ -76,6 +76,11 @@ export type MatchLiveState = {
   requiredRunRate: string;
 };
 
+export type MatchWinPrediction = {
+  team1Percent: string;
+  team2Percent: string;
+};
+
 export type MatchBowler = {
   name: string;
   overs: string;
@@ -129,4 +134,5 @@ export type MatchDetailData = {
   team1Players: TeamPlayer[];
   team2Players: TeamPlayer[];
   liveState: MatchLiveState | null;
+  winPrediction: MatchWinPrediction | null;
 };

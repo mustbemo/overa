@@ -24,15 +24,18 @@ import {
   parseMatchLinks,
   parseTitleMeta,
   toScorecardUrl,
+  toSquadsUrl,
 } from "./match-links";
 import {
   extractTeamPlayersFromCommentaryPayload,
+  extractTeamPlayersFromSquadsHtml,
   mergeTeamPlayers,
 } from "./players";
 import { parseScorecardDetails } from "./scorecard";
 import { deriveStatusType, hasUsableStatus, pickBestStatus } from "./status";
 import { parseEmbeddedSummaries } from "./summaries";
 import { safeText } from "./text";
+import { parseWinPredictionFromHtml } from "./win-prediction";
 
 function normalizePlayerKey(value: string): string {
   return value
@@ -101,8 +104,10 @@ function addYetToBat(
     const batted = new Set(
       entry.batsmen.map((batter) => normalizePlayerKey(batter.name)),
     );
-    const seenYetToBat = new Set<string>();
-    const yetToBat: string[] = [];
+    const seenYetToBat = new Set(
+      entry.yetToBat.map((playerName) => normalizePlayerKey(playerName)),
+    );
+    const yetToBat = [...entry.yetToBat];
 
     for (const player of squad) {
       if (player.substitute) {
@@ -504,9 +509,18 @@ export async function getMatchDetail(
     matchLink?.title ?? syntheticMatchLink?.title ?? null,
   );
 
+  const isLiveMatch =
+    deriveStatusType({
+      status: detail.status,
+      state: detail.state,
+      title: detail.title,
+      hasScore: Boolean(detail.team1.score || detail.team2.score),
+    }) === "live";
+
   let liveState = parseLiveStateFromHtml(scorecardHtml);
   let team1Players = detail.team1Players;
   let team2Players = detail.team2Players;
+  let winPrediction = detail.winPrediction;
 
   const livePageCandidates = [
     ...(matchLink ? [matchLink.url] : []),
@@ -521,19 +535,19 @@ export async function getMatchDetail(
         liveState,
         parseLiveStateFromHtml(livePageHtml),
       );
+
+      if (isLiveMatch && !winPrediction) {
+        winPrediction = parseWinPredictionFromHtml(
+          livePageHtml,
+          detail.team1,
+          detail.team2,
+        );
+      }
       break;
     } catch {
       // Try the next candidate URL.
     }
   }
-
-  const isLiveMatch =
-    deriveStatusType({
-      status: detail.status,
-      state: detail.state,
-      title: detail.title,
-      hasScore: Boolean(detail.team1.score || detail.team2.score),
-    }) === "live";
 
   const commentaryResponses = await Promise.allSettled([
     fetchJson<unknown>(`${CRICBUZZ_BASE_URL}/match-api/${id}/commentary.json`),
@@ -559,6 +573,27 @@ export async function getMatchDetail(
     team2Players = mergeTeamPlayers(team2Players, extracted.team2Players);
   }
 
+  const squadsCandidates = [
+    ...(matchLink ? [toSquadsUrl(matchLink.url)] : []),
+    ...(syntheticMatchLink ? [toSquadsUrl(syntheticMatchLink.url)] : []),
+    `${CRICBUZZ_BASE_URL}/cricket-match-squads/${id}`,
+  ];
+
+  for (const url of squadsCandidates) {
+    try {
+      const squadsHtml = await fetchHtml(url);
+      const extracted = extractTeamPlayersFromSquadsHtml(squadsHtml);
+      team1Players = mergeTeamPlayers(team1Players, extracted.team1Players);
+      team2Players = mergeTeamPlayers(team2Players, extracted.team2Players);
+
+      if (extracted.team1Players.length > 0 || extracted.team2Players.length > 0) {
+        break;
+      }
+    } catch {
+      // Squads are optional. Ignore failures and continue.
+    }
+  }
+
   if (isLiveMatch) {
     liveState = pickPreferredLiveState(
       liveState,
@@ -580,5 +615,6 @@ export async function getMatchDetail(
     team1Players,
     team2Players,
     liveState,
+    winPrediction,
   };
 }

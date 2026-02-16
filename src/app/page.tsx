@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2, Power, RefreshCcw } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Power } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/cricket/empty-state";
 import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
@@ -11,10 +11,12 @@ import {
   useWindowClose,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
-import { MATCH_TABS, pickDefaultTab, type MatchTabKey } from "@/lib/cricket-ui";
+import { MATCH_TABS, type MatchTabKey } from "@/lib/cricket-ui";
 import { useMatchesQuery } from "@/lib/cricket-query";
 import { cn } from "@/lib/classnames";
 import { HOME_WINDOW_SIZE } from "@/lib/window-presets";
+
+const HOME_TAB_STORAGE_KEY = "criclive.home.selected-tab";
 
 const EMPTY_TAB_MESSAGE: Record<
   MatchTabKey,
@@ -39,10 +41,27 @@ export default function HomePage() {
 
   const startDrag = useWindowDragStart();
   const closeWindow = useWindowClose();
-  const { data, error, isError, isFetching, isLoading, refetch } =
+  const { data, error, isError, isLoading, refetch } =
     useMatchesQuery();
 
-  const [selectedTab, setSelectedTab] = useState<MatchTabKey>("live");
+  const [selectedTab, setSelectedTab] = useState<MatchTabKey>(() => {
+    if (typeof window === "undefined") {
+      return "live";
+    }
+
+    const persisted = window.localStorage.getItem(HOME_TAB_STORAGE_KEY);
+    const isValidTab = MATCH_TABS.some((tab) => tab.key === persisted);
+
+    return isValidTab ? (persisted as MatchTabKey) : "live";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(HOME_TAB_STORAGE_KEY, selectedTab);
+  }, [selectedTab]);
 
   const counts = useMemo(() => {
     return {
@@ -52,17 +71,7 @@ export default function HomePage() {
     };
   }, [data]);
 
-  const activeTab = useMemo(() => {
-    if (!data) {
-      return selectedTab;
-    }
-
-    if (data[selectedTab].length > 0) {
-      return selectedTab;
-    }
-
-    return pickDefaultTab(data);
-  }, [data, selectedTab]);
+  const activeTab = selectedTab;
 
   const matches = data?.[activeTab] ?? [];
 

@@ -305,6 +305,30 @@ function toDisplayBatsmen(
     });
 }
 
+function toYetToBatBatters(
+  batsmenData: Record<string, RawBatsman>,
+): string[] {
+  const names = new Set<string>();
+
+  for (const player of Object.values(batsmenData)) {
+    const dismissal = safeText(player.outDesc).toLowerCase();
+
+    if (!/(yet to bat|did not bat|dnb|to bat)/.test(dismissal)) {
+      continue;
+    }
+
+    const name = safeText(player.batName);
+
+    if (!name) {
+      continue;
+    }
+
+    names.add(name);
+  }
+
+  return Array.from(names);
+}
+
 function toDisplayBowlers(
   bowlersData: Record<string, RawBowler>,
 ): MatchBowler[] {
@@ -374,7 +398,7 @@ function toDisplayInnings(scoreCard: RawScorecardInnings[]): MatchInnings[] {
       batsmen: toDisplayBatsmen(batsmenData),
       bowlers: toDisplayBowlers(bowlersData),
       fallOfWickets: toFallOfWickets(wicketsData),
-      yetToBat: [],
+      yetToBat: toYetToBatBatters(batsmenData),
     };
   });
 }
@@ -556,5 +580,6 @@ export function parseScorecardDetails(
       fallbackTeam2Players,
     ),
     liveState: null,
+    winPrediction: null,
   };
 }

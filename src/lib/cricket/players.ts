@@ -1,11 +1,17 @@
 import type { TeamPlayer } from "@/lib/types";
 import { CRICBUZZ_BASE_URL } from "./constants";
 import type {
+  RawMatchHeader,
+  RawMatchInfo,
   RawCommentaryPayload,
   RawPlayer,
   RawScorecardInnings,
   RawTeamHeader,
 } from "./internal-types";
+import {
+  pickAllEscapedArraysByKey,
+  pickAllEscapedObjectsByKey,
+} from "./json-extract";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -447,6 +453,82 @@ function collectPlayersFromTeamNode(
 
 function teamIdFromNode(teamNode: RawTeamHeader | null): string {
   return toText(teamNode?.id);
+}
+
+export function extractTeamPlayersFromSquadsHtml(html: string): {
+  team1Players: TeamPlayer[];
+  team2Players: TeamPlayer[];
+} {
+  const matchHeader =
+    pickAllEscapedObjectsByKey<RawMatchHeader>(html, "matchHeader").at(0) ??
+    null;
+  const matchInfo =
+    pickAllEscapedObjectsByKey<RawMatchInfo>(html, "matchInfo").at(0) ?? null;
+
+  const rawCatalogArrays = pickAllEscapedArraysByKey<RawPlayer>(html, "players");
+  const rawCatalogObjects = pickAllEscapedObjectsByKey<Record<string, RawPlayer>>(
+    html,
+    "players",
+  );
+  const rawCatalog = [
+    ...rawCatalogArrays.flat(),
+    ...rawCatalogObjects.flatMap((entry) => Object.values(entry)),
+  ];
+
+  const catalogPlayers = toTeamPlayers(rawCatalog);
+  const playersById = new Map<string, TeamPlayer>();
+
+  for (const player of catalogPlayers) {
+    if (player.id && player.id !== "-") {
+      playersById.set(player.id, player);
+    }
+  }
+
+  const team1Candidates = [matchHeader?.team1 ?? null, matchInfo?.team1 ?? null];
+  const team2Candidates = [matchHeader?.team2 ?? null, matchInfo?.team2 ?? null];
+
+  let team1Players: TeamPlayer[] = [];
+  let team2Players: TeamPlayer[] = [];
+
+  for (const teamNode of team1Candidates) {
+    team1Players = mergeTeamPlayers(
+      team1Players,
+      collectPlayersFromTeamNode(teamNode, playersById),
+    );
+  }
+
+  for (const teamNode of team2Candidates) {
+    team2Players = mergeTeamPlayers(
+      team2Players,
+      collectPlayersFromTeamNode(teamNode, playersById),
+    );
+  }
+
+  const team1Id =
+    teamIdFromNode(matchHeader?.team1 ?? null) ||
+    teamIdFromNode(matchInfo?.team1 ?? null);
+  const team2Id =
+    teamIdFromNode(matchHeader?.team2 ?? null) ||
+    teamIdFromNode(matchInfo?.team2 ?? null);
+
+  if (team1Id || team2Id) {
+    const mappedTeam1 = rawCatalog.filter((player) => {
+      const playerTeamId = toText(player.teamId ?? player.team_id);
+      return playerTeamId && playerTeamId === team1Id;
+    });
+    const mappedTeam2 = rawCatalog.filter((player) => {
+      const playerTeamId = toText(player.teamId ?? player.team_id);
+      return playerTeamId && playerTeamId === team2Id;
+    });
+
+    team1Players = mergeTeamPlayers(team1Players, toTeamPlayers(mappedTeam1));
+    team2Players = mergeTeamPlayers(team2Players, toTeamPlayers(mappedTeam2));
+  }
+
+  return {
+    team1Players,
+    team2Players,
+  };
 }
 
 export function extractTeamPlayersFromCommentaryPayload(payload: unknown): {

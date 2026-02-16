@@ -12,6 +12,10 @@ export function toScorecardUrl(liveUrl: string): string {
   return liveUrl.replace("/live-cricket-scores/", "/live-cricket-scorecard/");
 }
 
+export function toSquadsUrl(liveUrl: string): string {
+  return liveUrl.replace("/live-cricket-scores/", "/cricket-match-squads/");
+}
+
 export function buildLiveUrl(
   matchId: number,
   team1: string,
