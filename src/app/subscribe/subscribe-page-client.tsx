@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Expand, Shrink } from "lucide-react";
+import { ArrowLeft, Expand, Lock, LockOpen, Shrink } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ErrorState } from "@/components/cricket/error-state";
@@ -59,7 +59,9 @@ export function SubscribePageClient() {
 
   const [expanded, setExpanded] = useState(false);
   const [isCompactHovered, setIsCompactHovered] = useState(false);
-  const showCompactHeader = !expanded && isCompactHovered;
+  const [isLocked, setIsLocked] = useState(false);
+  const showCompactHeader =
+    !expanded && (isCompactHovered || isLocked);
 
   useSyncWindowSize(
     expanded
@@ -150,6 +152,18 @@ export function SubscribePageClient() {
               </div>
 
               <div className="flex items-center gap-1" data-no-drag>
+                {!expanded ? (
+                  <HeaderActionButton
+                    title={isLocked ? "Unlock widget" : "Lock widget"}
+                    onClick={() => setIsLocked((value) => !value)}
+                  >
+                    {isLocked ? (
+                      <Lock className="h-3.5 w-3.5" />
+                    ) : (
+                      <LockOpen className="h-3.5 w-3.5" />
+                    )}
+                  </HeaderActionButton>
+                ) : null}
                 <HeaderActionButton
                   title={expanded ? "Collapse widget" : "Expand widget"}
                   onClick={() => setExpanded((value) => !value)}
