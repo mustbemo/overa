@@ -189,7 +189,7 @@ function TeamScoreRow({
 function BallChip({ ball }: { ball: LiveOverBall }) {
   const kindStyle: Record<LiveOverBall["kind"], string> = {
     wicket: "border-rose-400/35 bg-rose-500/15 text-rose-100",
-    four: "border-sky-400/30 bg-sky-500/15 text-sky-100",
+    four: "border-green-400/30 bg-green-500/15 text-green-100",
     six: "border-amber-300/30 bg-amber-500/15 text-amber-100",
     extra: "border-violet-400/30 bg-violet-500/15 text-violet-100",
     dot: "border-slate-400/25 bg-slate-500/15 text-slate-200",
@@ -229,7 +229,7 @@ function SquadPlayerCell({ player }: { player: TeamPlayer | null }) {
           </span>
         ) : null}
         {player.keeper ? (
-          <span className="rounded border border-sky-400/35 bg-sky-500/10 px-1 py-px text-[8px] uppercase tracking-wide text-sky-200">
+          <span className="rounded border border-green-400/35 bg-green-500/10 px-1 py-px text-[8px] uppercase tracking-wide text-green-200">
             WK
           </span>
         ) : null}
@@ -322,7 +322,7 @@ function WinPredictionBar({
             style={{ width: `${team1Width}%` }}
           />
           <div
-            className="h-full bg-sky-400/85"
+            className="h-full bg-lime-400/80"
             style={{ width: `${team2Width}%` }}
           />
         </div>

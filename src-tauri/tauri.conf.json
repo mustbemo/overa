@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "CricLive Widget",
+  "productName": "Overa",
   "version": "0.1.0",
-  "identifier": "com.mohammeddanish.criclivewidget",
+  "identifier": "com.mohammeddanish.overa",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "clock",
-        "title": "CricLive Widget",
+        "title": "Overa",
         "width": 420,
         "height": 620,
         "minWidth": 320,

@@ -17,7 +17,7 @@ import { useMatchesQuery } from "@/lib/cricket-query";
 import { cn } from "@/lib/classnames";
 import { HOME_WINDOW_SIZE } from "@/lib/window-presets";
 
-const HOME_TAB_STORAGE_KEY = "criclive.home.selected-tab";
+const HOME_TAB_STORAGE_KEY = "overa.home.selected-tab";
 
 const EMPTY_TAB_MESSAGE: Record<
   MatchTabKey,
@@ -43,8 +43,7 @@ export default function HomePage() {
 
   const startDrag = useWindowDragStart();
   const closeWindow = useWindowClose();
-  const { data, error, isError, isLoading, refetch } =
-    useMatchesQuery();
+  const { data, error, isError, isLoading, refetch } = useMatchesQuery();
 
   const [selectedTab, setSelectedTab] = useState<MatchTabKey>(() => {
     if (typeof window === "undefined") {
@@ -89,7 +88,7 @@ export default function HomePage() {
           data-tauri-drag-region
         >
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-200/80">
-            CricLive
+            Overa
           </p>
 
           <div className="flex items-center gap-1" data-no-drag>
@@ -161,7 +160,7 @@ export default function HomePage() {
           data-tauri-drag-region
         >
           <div>
-            Made by{" "}
+            Built by{" "}
             <a
               href="https://mohammeddanish.vercel.app/"
               target="_blank"

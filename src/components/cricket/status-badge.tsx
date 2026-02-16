@@ -4,7 +4,7 @@ import type { MatchStatusType } from "@/lib/types";
 const STATUS_STYLE: Record<MatchStatusType, string> = {
   live: "border-white/20 bg-emerald-500/10 text-emerald-200/80",
   upcoming: "border-white/20 bg-yellow-500/10 text-yellow-500/80",
-  complete: "border-white/20 bg-blue-500/10 text-blue-200/80",
+  complete: "border-white/20 bg-emerald-500/8 text-emerald-200/70",
 };
 
 const STATUS_LABEL: Record<MatchStatusType, string> = {

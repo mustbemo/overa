@@ -1,36 +1,168 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Overa
 
-## Getting Started
+Overa is a desktop cricket companion app built with **Tauri + Next.js**.  
+It gives you quick access to live scores, full match details, and an optional floating widget for live matches.
 
-First, run the development server:
+## What This App Is About
+
+Overa is designed for people who want cricket updates while working, studying, or gaming without keeping multiple browser tabs open.
+
+You can:
+- Track live, upcoming, and recent matches.
+- Open detailed match pages with scorecards, squads, and live breakdown.
+- Launch a floating subscribe view for live matches only.
+
+## Screenshots (Placeholders)
+
+### 1. Home Screen (Live / Upcoming / Recent)
+![Home Screen Placeholder](https://placehold.co/1200x675/0f172a/93c5fd?text=Add+Home+Screen+Screenshot)
+
+Add a screenshot showing:
+- Top header
+- Live / Upcoming / Recent tabs
+- Match list cards
+
+### 2. Match Details Screen
+![Match Details Placeholder](https://placehold.co/1200x675/0f172a/93c5fd?text=Add+Match+Details+Screenshot)
+
+Add a screenshot showing:
+- Live tab layout
+- Team score section
+- Batters / bowlers / recent balls
+
+### 3. Subscribe Widget (Compact)
+![Subscribe Compact Placeholder](https://placehold.co/900x600/0f172a/93c5fd?text=Add+Subscribe+Compact+Screenshot)
+
+Add a screenshot showing:
+- Compact mode when not hovered
+- Compact mode on hover with details
+
+### 4. Subscribe Widget (Expanded)
+![Subscribe Expanded Placeholder](https://placehold.co/900x600/0f172a/93c5fd?text=Add+Subscribe+Expanded+Screenshot)
+
+Add a screenshot showing:
+- Expanded view
+- Live stats and prediction section
+
+## Features
+
+- Live, upcoming, and recent match listing.
+- Match details with:
+  - Team scores
+  - Match status/toss/venue/start details
+  - RR / RRR
+  - Current batters and bowlers
+  - Recent balls / current over breakdown
+  - Team-wise scorecard tab
+  - Squads tab
+- Win prediction support (when available from source).
+- Route-based widget behavior:
+  - Subscribe page behaves like a floating widget.
+  - Home and match pages behave as normal app windows.
+- Desktop-first UI with compact and expanded subscribe modes.
+
+## How It Works
+
+1. The app fetches and parses cricket data from public Cricbuzz pages/endpoints.
+2. It normalizes that raw data into internal models.
+3. React Query handles polling and caching.
+4. UI routes render specialized views:
+- `/` home match list
+- `/match?matchId=...` detailed match page
+- `/subscribe?matchId=...` floating live widget
+5. Tauri window APIs control size/drag behavior and widget mode for subscribe page.
+
+## Where Data Comes From
+
+Primary source: **Cricbuzz public web data** parsed by app services.
+
+Key code locations:
+- `src/lib/cricket/service.ts`
+- `src/lib/cricket/scorecard.ts`
+- `src/lib/cricket/players.ts`
+- `src/lib/cricket/match-links.ts`
+
+Notes:
+- Data availability depends on source coverage.
+- Some fields (win prediction, complete squads, recent balls) may be unavailable for specific matches.
+- This project is not affiliated with Cricbuzz.
+
+## Download
+
+Use GitHub Releases for installers.
+
+- Latest release page: [Download Overa](https://github.com/<your-username>/<your-repo>/releases/latest)
+- macOS build: `Overa_<version>_aarch64.dmg` or `.app.tar.gz`
+- Windows build: `Overa_<version>_x64-setup.exe`
+- Linux build: `Overa_<version>_amd64.AppImage` (if enabled)
+
+Update `<your-username>/<your-repo>` with your actual GitHub repo path.
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Rust toolchain (stable)
+- Tauri system dependencies (WebView runtime and platform tooling)
+
+### Install
+
+```bash
+npm install
+```
+
+### Run web app only
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Run desktop app (Tauri)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run tauri:dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Build Desktop App
 
-## Learn More
+```bash
+npm run tauri:build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Build outputs are generated under `src-tauri/target/release/bundle/`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+src/
+  app/                     # Next.js routes (home, match, subscribe)
+  components/cricket/      # UI components for cards, tabs, score views
+  hooks/                   # Window + drag hooks
+  lib/cricket/             # Fetching/parsing/normalization services
+src-tauri/
+  src/                     # Tauri Rust entrypoint
+  tauri.conf.json          # Desktop app/window config
+```
 
-## Deploy on Vercel
+## Suggestions and Contributions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Suggestions, issues, and pull requests are welcome.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+You can contribute by:
+- Reporting parsing/data mismatches with match examples.
+- Improving UI/UX and responsiveness.
+- Adding tests for data parsers.
+- Improving squad and scorecard reliability.
+- Proposing new features.
+
+Recommended contribution flow:
+1. Open an issue with context and expected behavior.
+2. Fork the repo and create a branch.
+3. Submit a PR with a clear change summary.
+
+## Disclaimer
+
+Overa is an unofficial project.  
+Cricket data is sourced from publicly accessible pages and may change or break if source formats change.

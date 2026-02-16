@@ -95,7 +95,7 @@ main,
   width: 16px;
   height: 2px;
   border-radius: 999px;
-  background: rgba(244, 244, 245, 0.35);
+  background: rgba(16, 185, 129, 0.3);
   overflow: hidden;
 }
 
@@ -106,9 +106,9 @@ main,
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: #fafafa;
+  background: #34d399;
   transform: translateY(-50%);
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.65);
   animation: live-track-runner 1s ease-in-out infinite alternate;
 }
 

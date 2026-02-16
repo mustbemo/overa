@@ -3,8 +3,9 @@ import { AppQueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CricLive Floating Desktop",
-  description: "Always-on-top floating cricket live score desktop widget",
+  title: "Overa - Live Cricket Desktop Companion",
+  description:
+    "Desktop cricket companion with live scores, match details, and an optional floating subscribe widget.",
 };
 
 export default function RootLayout({
