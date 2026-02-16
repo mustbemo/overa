@@ -167,7 +167,8 @@ export function SubscribePageClient() {
           <div
             className={cn(
               "min-h-0 flex-1 overflow-y-auto",
-              expanded || showCompactHeader ? "px-2.5 py-2.5" : "px-1.5 py-1.5",
+              !expanded && !showCompactHeader && "hide-scrollbar",
+              expanded || showCompactHeader ? "px-2.5 py-2.5" : "px-1 py-1",
             )}
             data-no-drag
           >
@@ -189,7 +190,10 @@ export function SubscribePageClient() {
               expanded ? (
                 <SubscribeExpandedView detail={data} />
               ) : (
-                <SubscribeCompactView detail={data} />
+                <SubscribeCompactView
+                  detail={data}
+                  showDetails={showCompactHeader}
+                />
               )
             ) : null}
           </div>

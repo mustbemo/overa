@@ -133,7 +133,13 @@ function TeamRow({
   );
 }
 
-export function SubscribeCompactView({ detail }: { detail: MatchDetailData }) {
+export function SubscribeCompactView({
+  detail,
+  showDetails = true,
+}: {
+  detail: MatchDetailData;
+  showDetails?: boolean;
+}) {
   const statusType = getStatusType(detail.status);
   const batters = detail.liveState?.batters ?? [];
   const bowlerRows = [
@@ -155,6 +161,37 @@ export function SubscribeCompactView({ detail }: { detail: MatchDetailData }) {
   const breakdownLabel = hasRecentBreakdown
     ? (detail.liveState?.recentBallsLabel ?? "Recent balls")
     : "Current over";
+
+  if (!showDetails) {
+    return (
+      <div className="p-2">
+        <div className="space-y-2">
+          <TeamRow
+            name={detail.team1.name}
+            shortName={detail.team1.shortName}
+            score={detail.team1.score}
+            flagUrl={detail.team1.flagUrl}
+          />
+          <TeamRow
+            name={detail.team2.name}
+            shortName={detail.team2.shortName}
+            score={detail.team2.score}
+            flagUrl={detail.team2.flagUrl}
+          />
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-[9px] text-red-400/90">
+              {detail.status || detail.state || "-"}
+            </p>
+            <StatusBadge
+              status={detail.status}
+              statusType={statusType}
+              compact
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-1.5 pb-0.5">

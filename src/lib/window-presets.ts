@@ -15,12 +15,12 @@ export const MATCH_WINDOW_SIZE: WindowPreset = {
 
 export const SUBSCRIBE_COLLAPSED_WINDOW_SIZE: WindowPreset = {
   width: 340,
-  height: 176,
+  height: 88,
 };
 
 export const SUBSCRIBE_COLLAPSED_HOVER_WINDOW_SIZE: WindowPreset = {
   width: 340,
-  height: 220,
+  height: 132,
 };
 
 export const SUBSCRIBE_EXPANDED_WINDOW_SIZE: WindowPreset = {

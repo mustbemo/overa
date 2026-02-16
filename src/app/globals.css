@@ -112,6 +112,17 @@ main,
   animation: live-track-runner 1s ease-in-out infinite alternate;
 }
 
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 @keyframes live-track-runner {
   from {
     left: 0;
