@@ -83,7 +83,9 @@ export function MatchPageClient() {
           className="flex-1 space-y-2.5 overflow-y-auto px-2.5 py-2.5"
           data-no-drag
         >
-          {isLoading ? <LoadingState message="Loading match details..." /> : null}
+          {isLoading ? (
+            <LoadingState message="Loading match details..." />
+          ) : null}
 
           {isError ? (
             <ErrorState

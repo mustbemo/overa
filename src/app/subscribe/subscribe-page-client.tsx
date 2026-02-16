@@ -44,7 +44,7 @@ function IconActionButton({
 
 function SubscribeCard({ children }: { children: React.ReactNode }) {
   return (
-    <section className="h-full w-full rounded-[16px] border border-white/12 bg-zinc-950/92 shadow-[0_16px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+    <section className="h-full w-full rounded-[16px] border border-white/12 bg-zinc-950/92">
       {children}
     </section>
   );

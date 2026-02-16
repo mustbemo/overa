@@ -20,7 +20,10 @@ type DetailTabKey = "live" | "scorecard" | "squads";
 type InningsTabKey = "team1" | "team2";
 
 function normalizeTeamKey(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
 }
 
 function teamNamesLikelyMatch(
@@ -169,7 +172,9 @@ function TeamScoreRow({
       <div className="flex min-w-0 items-center gap-2.5">
         <TeamMark name={name} shortName={shortName} flagUrl={flagUrl} />
         <div className="min-w-0">
-          <p className="truncate text-[12px] font-medium text-slate-100">{name}</p>
+          <p className="truncate text-[12px] font-medium text-slate-100">
+            {name}
+          </p>
           <p className="truncate text-[9px] uppercase tracking-wider text-slate-400">
             {shortName}
           </p>
@@ -210,7 +215,9 @@ function SquadPlayerCell({ player }: { player: TeamPlayer | null }) {
 
   return (
     <>
-      <p className="truncate text-[10px] font-medium text-slate-100">{player.name}</p>
+      <p className="truncate text-[10px] font-medium text-slate-100">
+        {player.name}
+      </p>
       <div className="mt-0.5 flex flex-wrap items-center gap-1">
         {player.role && player.role !== "-" ? (
           <span className="rounded border border-white/10 bg-black/30 px-1 py-px text-[8px] uppercase tracking-wide text-slate-300">
@@ -298,11 +305,15 @@ function WinPredictionBar({
       <div className="mt-1 flex items-center justify-between gap-2 text-[10px]">
         <div className="min-w-0">
           <p className="truncate text-slate-300">{team1Label}</p>
-          <p className="font-semibold tabular-nums text-slate-100">{team1Percent}</p>
+          <p className="font-semibold tabular-nums text-slate-100">
+            {team1Percent}
+          </p>
         </div>
         <div className="min-w-0 text-right">
           <p className="truncate text-slate-300">{team2Label}</p>
-          <p className="font-semibold tabular-nums text-slate-100">{team2Percent}</p>
+          <p className="font-semibold tabular-nums text-slate-100">
+            {team2Percent}
+          </p>
         </div>
       </div>
       <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/8">
@@ -426,20 +437,25 @@ export function MatchDetailsTabs({
         ))}
       </nav>
 
+      {/* Live */}
       {activeTab === "live" ? (
         <section className="rounded-xl border border-white/8 bg-white/4 p-3">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="min-w-0">
+          {/* Match Title */}
+          <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
+            {/* <div className="min-w-0">
               <p className="truncate text-[12px] font-medium text-slate-100">
                 {displayTitle}
               </p>
               <p className="mt-px truncate text-[10px] text-slate-400">
                 {detail.series || "Series"}
               </p>
+            </div> */}
+            <div className="flex items-center gap-2 shrink-0">
+              <StatusBadge status={detail.status} statusType={statusType} />
             </div>
-            <StatusBadge status={detail.status} statusType={statusType} />
           </div>
 
+          {/* Team Scores */}
           <div className="rounded-lg border border-white/8 bg-black/20 px-2.5 py-2">
             <TeamScoreRow
               name={detail.team1.name}
@@ -455,10 +471,12 @@ export function MatchDetailsTabs({
             />
           </div>
 
-          <p className="mt-2.5 text-[10px] font-medium text-emerald-200/90">
+          {/* Status */}
+          <p className="mt-2.5 ml-1 pb-2 text-[10.5px] font-medium text-red-400/90">
             {detail.status || detail.state || "-"}
           </p>
 
+          {/* Win Prediction */}
           {isLive && detail.winPrediction ? (
             <WinPredictionBar
               team1Label={detail.team1.shortName || detail.team1.name}
@@ -468,18 +486,23 @@ export function MatchDetailsTabs({
             />
           ) : null}
 
+          {/* RR & RRR */}
           <div
             className={`mt-2 grid gap-1.5 ${showRequiredRate ? "grid-cols-2" : "grid-cols-1"}`}
           >
-            <div className="rounded-md border border-white/8 bg-white/[0.03] px-2 py-1.5">
-              <p className="text-[9px] uppercase tracking-wider text-slate-400">RR</p>
+            <div className="rounded-md border border-white/8 bg-black/20 px-2 py-1.5">
+              <p className="text-[9px] uppercase tracking-wider text-slate-400">
+                RR
+              </p>
               <p className="mt-0.5 text-[11px] font-semibold tabular-nums text-slate-100">
                 {currentRunRate}
               </p>
             </div>
             {showRequiredRate ? (
-              <div className="rounded-md border border-white/8 bg-white/[0.03] px-2 py-1.5">
-                <p className="text-[9px] uppercase tracking-wider text-slate-400">RRR</p>
+              <div className="rounded-md border border-white/8 bg-black/20 px-2 py-1.5">
+                <p className="text-[9px] uppercase tracking-wider text-slate-400">
+                  RRR
+                </p>
                 <p className="mt-0.5 text-[11px] font-semibold tabular-nums text-slate-100">
                   {requiredRunRate}
                 </p>
@@ -487,14 +510,12 @@ export function MatchDetailsTabs({
             ) : null}
           </div>
 
+          {/* Current Batters */}
           <div className="mt-2.5 overflow-x-auto rounded-lg border border-white/8 bg-black/20 px-2 py-1.5">
-            <p className="mb-1 text-[9px] font-medium uppercase tracking-wider text-slate-400">
-              Current Batters
-            </p>
             <table className="w-full min-w-[320px] border-collapse text-left text-[10px]">
               <thead>
                 <tr className="border-b border-white/8 text-slate-400">
-                  <th className="py-1.5 pr-2 font-medium">Batter</th>
+                  <th className="py-1.5 pr-2 font-medium">Current Batter</th>
                   <th className="px-1 py-1.5 text-right font-medium">R</th>
                   <th className="px-1 py-1.5 text-right font-medium">B</th>
                   <th className="px-1 py-1.5 text-right font-medium">4s</th>
@@ -504,7 +525,10 @@ export function MatchDetailsTabs({
               </thead>
               <tbody>
                 {currentBatters.map((batter) => (
-                  <tr key={batter.id} className="border-b border-white/6 last:border-0">
+                  <tr
+                    key={batter.id}
+                    className="border-b border-white/6 last:border-0"
+                  >
                     <td className="py-1.5 pr-2 text-slate-200">
                       {batter.name}
                       {batter.onStrike ? " *" : ""}
@@ -537,8 +561,10 @@ export function MatchDetailsTabs({
             </table>
           </div>
 
-          <div className="mt-2.5 rounded-lg border border-white/8 bg-black/20 px-2 py-1.5">
-            <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">
+          {/* Yet To Bat */}
+          <div className="mt-2.5 rounded-lg border border-white/8 bg-black/20 p-2">
+            {/* Yet To Bat Players */}
+            <p className="text-[9px] font-medium tracking-wider text-slate-400 pl-1 ">
               Yet To Bat
             </p>
             {yetToBatBatters.length > 0 ? (
@@ -559,14 +585,12 @@ export function MatchDetailsTabs({
             )}
           </div>
 
+          {/* Current Bowler */}
           <div className="mt-2.5 overflow-x-auto rounded-lg border border-white/8 bg-black/20 px-2 py-1.5">
-            <p className="mb-1 text-[9px] font-medium uppercase tracking-wider text-slate-400">
-              Current And Previous Bowlers
-            </p>
             <table className="w-full min-w-[330px] border-collapse text-left text-[10px]">
               <thead>
                 <tr className="border-b border-white/8 text-slate-400">
-                  <th className="py-1.5 pr-2 font-medium">Bowler</th>
+                  <th className="py-1.5 pr-2 font-medium">Current Bowler</th>
                   <th className="px-1 py-1.5 text-right font-medium">O</th>
                   <th className="px-1 py-1.5 text-right font-medium">M</th>
                   <th className="px-1 py-1.5 text-right font-medium">R</th>
@@ -614,6 +638,7 @@ export function MatchDetailsTabs({
             </table>
           </div>
 
+          {/* Ball Breakdown */}
           <div className="mt-2.5 rounded-lg border border-white/8 bg-black/20 px-2 py-1.5">
             <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">
               {breakdownLabel || "Current over"}
@@ -621,7 +646,10 @@ export function MatchDetailsTabs({
             {breakdownBalls.length > 0 ? (
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {breakdownBalls.map((ball, index) => (
-                  <BallChip key={`${ball.label}-${ball.value}-${index}`} ball={ball} />
+                  <BallChip
+                    key={`${ball.label}-${ball.value}-${index}`}
+                    ball={ball}
+                  />
                 ))}
               </div>
             ) : (
@@ -639,6 +667,7 @@ export function MatchDetailsTabs({
             <SummaryChip label="Match" value={detail.matchDesc} />
           </div>
 
+          {/* Subscribe Button */}
           {showSubscribeButton && isLive ? (
             <button
               type="button"
@@ -652,6 +681,7 @@ export function MatchDetailsTabs({
         </section>
       ) : null}
 
+      {/* Scorecard */}
       {activeTab === "scorecard" ? (
         <section className="overflow-hidden rounded-xl border border-white/8 bg-white/4">
           <div className="flex items-center gap-4 border-b border-white/8 px-3 pt-2">
@@ -680,7 +710,10 @@ export function MatchDetailsTabs({
 
           <div className="space-y-2 p-2">
             {activeInnings.map((innings, index) => (
-              <InningsCard key={`${innings.inningsId}-${index}`} innings={innings} />
+              <InningsCard
+                key={`${innings.inningsId}-${index}`}
+                innings={innings}
+              />
             ))}
             {activeInnings.length === 0 ? (
               <EmptyState
@@ -692,6 +725,7 @@ export function MatchDetailsTabs({
         </section>
       ) : null}
 
+      {/* Squads */}
       {activeTab === "squads" ? (
         <section className="overflow-hidden rounded-xl border border-white/8 bg-white/4">
           <div className="border-b border-white/8 px-3 py-2">
