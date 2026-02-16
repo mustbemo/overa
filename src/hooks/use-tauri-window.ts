@@ -8,6 +8,28 @@ export type WindowSize = {
   height: number;
 };
 
+export type WindowMode = "app" | "widget";
+
+const WINDOW_MODE_FLAGS: Record<
+  WindowMode,
+  {
+    alwaysOnTop: boolean;
+    visibleOnAllWorkspaces: boolean;
+    skipTaskbar: boolean;
+  }
+> = {
+  app: {
+    alwaysOnTop: false,
+    visibleOnAllWorkspaces: false,
+    skipTaskbar: false,
+  },
+  widget: {
+    alwaysOnTop: true,
+    visibleOnAllWorkspaces: true,
+    skipTaskbar: true,
+  },
+};
+
 function isTauriWindowRuntime(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
@@ -35,9 +57,11 @@ export function useWindowDragStart() {
       return;
     }
 
-    void getCurrentWindow().startDragging().catch(() => {
-      // Ignore drag errors in browser runtime.
-    });
+    void getCurrentWindow()
+      .startDragging()
+      .catch(() => {
+        // Ignore drag errors in browser runtime.
+      });
   }, []);
 }
 
@@ -57,14 +81,33 @@ export function useSyncWindowSize(size: WindowSize): void {
   }, [size]);
 }
 
+export function useSyncWindowMode(mode: WindowMode): void {
+  useEffect(() => {
+    if (!isTauriWindowRuntime()) {
+      return;
+    }
+
+    const appWindow = getCurrentWindow();
+    const modeFlags = WINDOW_MODE_FLAGS[mode];
+
+    void Promise.allSettled([
+      appWindow.setAlwaysOnTop(modeFlags.alwaysOnTop),
+      appWindow.setVisibleOnAllWorkspaces(modeFlags.visibleOnAllWorkspaces),
+      appWindow.setSkipTaskbar(modeFlags.skipTaskbar),
+    ]);
+  }, [mode]);
+}
+
 export function useWindowClose() {
   return useCallback(() => {
     if (!isTauriWindowRuntime()) {
       return;
     }
 
-    void getCurrentWindow().close().catch(() => {
-      // Ignore close errors in browser runtime.
-    });
+    void getCurrentWindow()
+      .close()
+      .catch(() => {
+        // Ignore close errors in browser runtime.
+      });
   }, []);
 }

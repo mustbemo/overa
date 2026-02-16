@@ -31,9 +31,9 @@
         "transparent": true,
         "backgroundColor": "#00000000",
         "acceptFirstMouse": true,
-        "alwaysOnTop": true,
-        "visibleOnAllWorkspaces": true,
-        "skipTaskbar": true,
+        "alwaysOnTop": false,
+        "visibleOnAllWorkspaces": false,
+        "skipTaskbar": false,
         "shadow": false
       }
     ],

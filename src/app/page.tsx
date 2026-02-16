@@ -7,6 +7,7 @@ import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
 import { MatchCard } from "@/components/cricket/match-card";
 import {
+  useSyncWindowMode,
   useSyncWindowSize,
   useWindowClose,
   useWindowDragStart,
@@ -37,6 +38,7 @@ const EMPTY_TAB_MESSAGE: Record<
 };
 
 export default function HomePage() {
+  useSyncWindowMode("app");
   useSyncWindowSize(HOME_WINDOW_SIZE);
 
   const startDrag = useWindowDragStart();

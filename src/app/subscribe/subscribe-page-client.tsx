@@ -9,6 +9,7 @@ import { formatMatchTitle } from "@/components/cricket/match-details-tabs";
 import { SubscribeCompactView } from "@/components/cricket/subscribe-compact-view";
 import { SubscribeExpandedView } from "@/components/cricket/subscribe-expanded-view";
 import {
+  useSyncWindowMode,
   useSyncWindowSize,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
@@ -63,6 +64,7 @@ export function SubscribePageClient() {
   const showCompactHeader =
     !expanded && (isCompactHovered || isLocked);
 
+  useSyncWindowMode("widget");
   useSyncWindowSize(
     expanded
       ? SUBSCRIBE_EXPANDED_WINDOW_SIZE

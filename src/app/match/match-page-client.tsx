@@ -9,6 +9,7 @@ import {
   formatMatchTitle,
 } from "@/components/cricket/match-details-tabs";
 import {
+  useSyncWindowMode,
   useSyncWindowSize,
   useWindowDragStart,
 } from "@/hooks/use-tauri-window";
@@ -17,6 +18,7 @@ import { useMatchDetailQuery } from "@/lib/cricket-query";
 import { MATCH_WINDOW_SIZE } from "@/lib/window-presets";
 
 export function MatchPageClient() {
+  useSyncWindowMode("app");
   useSyncWindowSize(MATCH_WINDOW_SIZE);
 
   const router = useRouter();
