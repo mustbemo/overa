@@ -15,7 +15,7 @@ You can:
 
 ## Demo
 
-![Demo](public/video/demo.mov)
+![Demo](public/video/demo.mp4)
 
 ## Screenshots
 
