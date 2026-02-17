@@ -1,7 +1,7 @@
 "use client";
 
 import { Power } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { EmptyState } from "@/components/cricket/empty-state";
 import { ErrorState } from "@/components/cricket/error-state";
 import { LoadingState } from "@/components/cricket/loading-state";
@@ -18,6 +18,37 @@ import { cn } from "@/lib/classnames";
 import { HOME_WINDOW_SIZE } from "@/lib/window-presets";
 
 const HOME_TAB_STORAGE_KEY = "overa.home.selected-tab";
+const HOME_TAB_STORAGE_EVENT = "overa.home.selected-tab-change";
+
+function getStoredTab(): MatchTabKey {
+  if (typeof window === "undefined") {
+    return "live";
+  }
+
+  const persisted = window.localStorage.getItem(HOME_TAB_STORAGE_KEY);
+  const isValidTab = MATCH_TABS.some((tab) => tab.key === persisted);
+
+  return isValidTab ? (persisted as MatchTabKey) : "live";
+}
+
+function subscribeToStoredTab(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(HOME_TAB_STORAGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(HOME_TAB_STORAGE_EVENT, onStoreChange);
+  };
+}
+
+function setStoredTab(tab: MatchTabKey) {
+  window.localStorage.setItem(HOME_TAB_STORAGE_KEY, tab);
+  window.dispatchEvent(new Event(HOME_TAB_STORAGE_EVENT));
+}
 
 const EMPTY_TAB_MESSAGE: Record<
   MatchTabKey,
@@ -45,25 +76,6 @@ export default function HomePage() {
   const closeWindow = useWindowClose();
   const { data, error, isError, isLoading, refetch } = useMatchesQuery();
 
-  const [selectedTab, setSelectedTab] = useState<MatchTabKey>(() => {
-    if (typeof window === "undefined") {
-      return "live";
-    }
-
-    const persisted = window.localStorage.getItem(HOME_TAB_STORAGE_KEY);
-    const isValidTab = MATCH_TABS.some((tab) => tab.key === persisted);
-
-    return isValidTab ? (persisted as MatchTabKey) : "live";
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.localStorage.setItem(HOME_TAB_STORAGE_KEY, selectedTab);
-  }, [selectedTab]);
-
   const counts = useMemo(() => {
     return {
       live: data?.live.length ?? 0,
@@ -72,7 +84,11 @@ export default function HomePage() {
     };
   }, [data]);
 
-  const activeTab = selectedTab;
+  const activeTab = useSyncExternalStore<MatchTabKey>(
+    subscribeToStoredTab,
+    getStoredTab,
+    () => "live",
+  );
 
   const matches = data?.[activeTab] ?? [];
 
@@ -110,7 +126,7 @@ export default function HomePage() {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setSelectedTab(tab.key)}
+                onClick={() => setStoredTab(tab.key)}
                 className={cn(
                   "rounded-md px-2 py-1 text-[9px] font-medium transition",
                   activeTab === tab.key

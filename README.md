@@ -91,12 +91,13 @@ Notes:
 
 Use GitHub Releases for installers.
 
-- Latest release page: [Download Overa](https://github.com/<your-username>/<your-repo>/releases/latest)
-- macOS build: `Overa_<version>_aarch64.dmg` or `.app.tar.gz`
-- Windows build: `Overa_<version>_x64-setup.exe`
-- Linux build: `Overa_<version>_amd64.AppImage` (if enabled)
+- Latest release page: [Download Overa](https://github.com/mustbemo/overa/releases/latest)
+- macOS download: [Overa for macOS](https://github.com/mustbemo/overa/releases/latest)
+- Windows download: [Overa for Windows](https://github.com/mustbemo/overa/releases/latest)
+- Linux download: [Overa for Linux](https://github.com/mustbemo/overa/releases/latest)
+- All releases: [View all releases](https://github.com/mustbemo/overa/releases)
 
-Update `<your-username>/<your-repo>` with your actual GitHub repo path.
+If no release is published yet, publish your first release and the links above will work automatically.
 
 ## Local Development
 

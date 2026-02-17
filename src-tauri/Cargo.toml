@@ -1,5 +1,5 @@
 [package]
-name = "app"
+name = "overa"
 version = "0.1.0"
 description = "Overa desktop app"
 authors = ["you"]
