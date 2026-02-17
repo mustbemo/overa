@@ -8,41 +8,30 @@ It gives you quick access to live scores, full match details, and an optional fl
 Overa is designed for people who want cricket updates while working, studying, or gaming without keeping multiple browser tabs open.
 
 You can:
+
 - Track live, upcoming, and recent matches.
 - Open detailed match pages with scorecards, squads, and live breakdown.
 - Launch a floating subscribe view for live matches only.
 
-## Screenshots (Placeholders)
+## Screenshots
 
 ### 1. Home Screen (Live / Upcoming / Recent)
-![Home Screen Placeholder](https://placehold.co/1200x675/0f172a/93c5fd?text=Add+Home+Screen+Screenshot)
 
-Add a screenshot showing:
-- Top header
-- Live / Upcoming / Recent tabs
-- Match list cards
+![Home Screen](public/images/home-screen.png)
 
 ### 2. Match Details Screen
-![Match Details Placeholder](https://placehold.co/1200x675/0f172a/93c5fd?text=Add+Match+Details+Screenshot)
 
-Add a screenshot showing:
-- Live tab layout
-- Team score section
-- Batters / bowlers / recent balls
+![Match Details Screen](public/images/match-details.png)
 
 ### 3. Subscribe Widget (Compact)
-![Subscribe Compact Placeholder](https://placehold.co/900x600/0f172a/93c5fd?text=Add+Subscribe+Compact+Screenshot)
 
-Add a screenshot showing:
-- Compact mode when not hovered
-- Compact mode on hover with details
+![Subscribe Compact - Default](public/images/subscribe-widget-compact-1.png)
+
+![Subscribe Compact - Hover](public/images/subscribe-widget-compact-2.png)
 
 ### 4. Subscribe Widget (Expanded)
-![Subscribe Expanded Placeholder](https://placehold.co/900x600/0f172a/93c5fd?text=Add+Subscribe+Expanded+Screenshot)
 
-Add a screenshot showing:
-- Expanded view
-- Live stats and prediction section
+![Subscribe Expanded](public/images/subscribe-widget-expanded.png)
 
 ## Features
 
@@ -67,9 +56,11 @@ Add a screenshot showing:
 2. It normalizes that raw data into internal models.
 3. React Query handles polling and caching.
 4. UI routes render specialized views:
+
 - `/` home match list
 - `/match?matchId=...` detailed match page
 - `/subscribe?matchId=...` floating live widget
+
 5. Tauri window APIs control size/drag behavior and widget mode for subscribe page.
 
 ## Where Data Comes From
@@ -77,12 +68,14 @@ Add a screenshot showing:
 Primary source: **Cricbuzz public web data** parsed by app services.
 
 Key code locations:
+
 - `src/lib/cricket/service.ts`
 - `src/lib/cricket/scorecard.ts`
 - `src/lib/cricket/players.ts`
 - `src/lib/cricket/match-links.ts`
 
 Notes:
+
 - Data availability depends on source coverage.
 - Some fields (win prediction, complete squads, recent balls) may be unavailable for specific matches.
 - This project is not affiliated with Cricbuzz.
@@ -187,12 +180,14 @@ Build outputs are generated under `src-tauri/target/release/bundle/`.
 This repo includes a release workflow at `.github/workflows/release.yml`.
 
 When you push a version tag like `v0.1.1`, GitHub Actions will:
+
 - Build desktop artifacts for macOS (Apple Silicon and Intel), Windows, and Linux.
 - Create a GitHub Release and upload artifacts automatically.
 
 No extra secrets are required for this workflow (unsigned builds).
 
 Note:
+
 - macOS and Windows binaries are unsigned in this setup.
 - macOS users should run the quarantine-removal command shown above.
 - Windows users might see SmartScreen and should use `More info -> Run anyway`.
@@ -228,6 +223,7 @@ src-tauri/
 Suggestions, issues, and pull requests are welcome.
 
 You can contribute by:
+
 - Reporting parsing/data mismatches with match examples.
 - Improving UI/UX and responsiveness.
 - Adding tests for data parsers.
@@ -235,6 +231,7 @@ You can contribute by:
 - Proposing new features.
 
 Recommended contribution flow:
+
 1. Open an issue with context and expected behavior.
 2. Fork the repo and create a branch.
 3. Submit a PR with a clear change summary.
