@@ -13,6 +13,10 @@ You can:
 - Open detailed match pages with scorecards, squads, and live breakdown.
 - Launch a floating subscribe view for live matches only.
 
+## Demo
+
+![Demo](public/video/demo.mov)
+
 ## Screenshots
 
 ### 1. Home Screen (Live / Upcoming / Recent)
