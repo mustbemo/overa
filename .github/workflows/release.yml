@@ -1,9 +1,9 @@
-name: release-on-push
+name: release
 
 on:
   push:
-    branches:
-      - "main"
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -60,8 +60,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: snapshot-${{ github.run_number }}-${{ github.run_attempt }}
-          releaseName: Overa snapshot ${{ github.run_number }}.${{ github.run_attempt }}
+          tagName: ${{ github.ref_name }}
+          releaseName: Overa ${{ github.ref_name }}
           generateReleaseNotes: true
-          prerelease: true
+          prerelease: false
           args: ${{ matrix.args }}

@@ -186,16 +186,29 @@ Build outputs are generated under `src-tauri/target/release/bundle/`.
 
 This repo includes a release workflow at `.github/workflows/release.yml`.
 
-When you push to `main`, GitHub Actions will:
+When you push a version tag like `v0.1.1`, GitHub Actions will:
 - Build desktop artifacts for macOS (Apple Silicon and Intel), Windows, and Linux.
-- Create a new pre-release snapshot and upload artifacts automatically.
+- Create a GitHub Release and upload artifacts automatically.
 
-No extra secrets are required for this workflow.
+No extra secrets are required for this workflow (unsigned builds).
 
 Note:
 - macOS and Windows binaries are unsigned in this setup.
 - macOS users should run the quarantine-removal command shown above.
 - Windows users might see SmartScreen and should use `More info -> Run anyway`.
+
+### Publish a New Latest Release
+
+1. Commit your code changes and push `main`.
+2. Create a new tag (example `v0.1.1`):
+
+```bash
+git tag -a v0.1.1 -m "Overa v0.1.1"
+git push origin v0.1.1
+```
+
+3. Wait for GitHub Actions to finish.
+4. Open Releases page and verify `Overa v0.1.1` has the `Latest` badge.
 
 ## Project Structure
 
