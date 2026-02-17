@@ -99,6 +99,54 @@ Use GitHub Releases for installers.
 
 If no release is published yet, publish your first release and the links above will work automatically.
 
+## Install and Run (Easy Steps)
+
+These steps are for builds downloaded from GitHub Releases.
+
+### macOS
+
+1. Download the macOS build from the latest release.
+2. If you downloaded a `.tar.gz`, extract it first.
+3. Move app to Applications and remove quarantine:
+
+```bash
+mv ~/Downloads/Overa.app /Applications/ 2>/dev/null || true
+xattr -dr com.apple.quarantine "/Applications/Overa.app"
+open "/Applications/Overa.app"
+```
+
+If your file is still archived, run:
+
+```bash
+tar -xzf ~/Downloads/Overa_*.app.tar.gz -C ~/Downloads
+mv ~/Downloads/Overa.app /Applications/
+xattr -dr com.apple.quarantine "/Applications/Overa.app"
+open "/Applications/Overa.app"
+```
+
+### Windows
+
+1. Download the Windows build from the latest release.
+2. Double-click the installer or executable.
+3. If Microsoft Defender SmartScreen appears, click:
+   - `More info`
+   - `Run anyway`
+
+You may see this warning because the app is not code-signed yet.
+
+### Linux
+
+1. Download the Linux build from the latest release.
+2. Make it executable.
+3. Run it.
+
+Example for an AppImage:
+
+```bash
+chmod +x ~/Downloads/Overa*.AppImage
+~/Downloads/Overa*.AppImage
+```
+
 ## Local Development
 
 ### Prerequisites
@@ -133,6 +181,21 @@ npm run tauri:build
 ```
 
 Build outputs are generated under `src-tauri/target/release/bundle/`.
+
+## Automated Releases (GitHub Actions)
+
+This repo includes a release workflow at `.github/workflows/release.yml`.
+
+When you push to `main`, GitHub Actions will:
+- Build desktop artifacts for macOS (Apple Silicon and Intel), Windows, and Linux.
+- Create a new pre-release snapshot and upload artifacts automatically.
+
+No extra secrets are required for this workflow.
+
+Note:
+- macOS and Windows binaries are unsigned in this setup.
+- macOS users should run the quarantine-removal command shown above.
+- Windows users might see SmartScreen and should use `More info -> Run anyway`.
 
 ## Project Structure
 
